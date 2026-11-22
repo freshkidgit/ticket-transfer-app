@@ -1,0 +1,14 @@
+node_modules/
+frames/
+frames_detailed/
+all_frames/
+frame_*.png
+artist_crop.png
+venue_map_crop.png
+last_frame.png
+check_*.png
+conan_wikimedia.jpg
+conan_memories.jpg
+conan_deezer.jpg
+.npm/
+.DS_Store

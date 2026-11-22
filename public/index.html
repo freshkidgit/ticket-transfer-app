@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Ticketmaster - My Tickets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Averia+Sans+Libre&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Tool Header for Testing/Previewing -->
+  <aside class="demo-toolbar" aria-label="Demo controls">
+    <div class="toolbar-brand">
+      <span class="pulse-dot"></span>
+      <strong>Ticket Platform</strong>
+      <span class="db-pill">SQLite Connected</span>
+    </div>
+    <div class="toolbar-actions">
+      <button id="toggleDeviceBtn" class="tool-btn" title="Toggle Phone Frame / Responsive View">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"></rect><line x1="12" y1="18" x2="12" y2="18.01"></line></svg>
+        <span class="btn-text">Mobile Frame</span>
+      </button>
+      <button id="resetTicketsBtn" class="tool-btn warning" title="Reset all tickets to active">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        <span class="btn-text">Reset Tickets</span>
+      </button>
+      <a href="/admin.html" class="tool-btn admin-link" title="Open Database & Event Settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span class="btn-text">Admin / DB Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- App Viewport Container -->
+  <div class="viewport-wrapper frame-mode" id="viewportWrapper">
+    <main class="mobile-device" id="mobileDevice">
+      
+      <!-- iOS Status Bar (Authentic look) -->
+      <header class="ios-status-bar">
+        <div class="status-left">
+          <span class="status-time" id="statusTime">1:11</span>
+        </div>
+        <div class="status-center">
+          <div class="dynamic-island">
+            <span class="island-icon-left">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#30d158"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            </span>
+            <span class="island-dot-right"></span>
+          </div>
+        </div>
+        <div class="status-right">
+          <svg class="signal-icon" width="16" height="11" viewBox="0 0 18 12" fill="currentColor">
+            <rect x="0" y="8" width="3" height="4" rx="0.8"/>
+            <rect x="5" y="5" width="3" height="7" rx="0.8"/>
+            <rect x="10" y="2" width="3" height="10" rx="0.8"/>
+            <rect x="15" y="0" width="3" height="12" rx="0.8"/>
+          </svg>
+          <svg class="wifi-icon" width="15" height="11" viewBox="0 0 16 12" fill="currentColor">
+            <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-4.2-3.1a6 6 0 018.4 0l1-1a7.4 7.4 0 00-10.4 0l1 1zm-2.5-2.5a9.5 9.5 0 0113.4 0l1-1a10.9 10.9 0 00-15.4 0l1 1z"/>
+          </svg>
+          <div class="battery-icon">
+            <div class="battery-level"></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Ticketmaster App Header -->
+      <nav class="tm-header">
+        <button class="nav-btn close-btn" id="closeNavBtn" aria-label="Close">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <h1 class="header-title">My Tickets</h1>
+        <button class="nav-btn help-btn" id="helpNavBtn">Help</button>
+      </nav>
+
+      <!-- Navigation Tabs -->
+      <div class="tm-tabs">
+        <button class="tab-item active" id="tabMyTickets">
+          <span>MY TICKETS</span>
+          <div class="tab-indicator"></div>
+        </button>
+        <button class="tab-item" id="tabAddOns">
+          <span>ADD-ONS</span>
+        </button>
+      </div>
+
+      <!-- Scrollable Ticket Content Container -->
+      <section class="ticket-view-scroll" id="ticketViewScroll">
+        
+        <!-- Ticket Carousel Stage -->
+        <div class="carousel-container" id="carouselContainer">
+          <div class="carousel-track" id="carouselTrack">
+            <!-- Ticket Cards Injected by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Carousel Pagination Dots -->
+        <div class="pagination-dots" id="paginationDots">
+          <!-- Dots injected by JS -->
+        </div>
+
+        <!-- Action Buttons: Transfer / Sell -->
+        <div class="action-buttons-group">
+          <button class="tm-btn primary-btn" id="transferBtn">
+            Transfer
+          </button>
+          <button class="tm-btn secondary-btn" id="sellBtn" disabled>
+            Sell
+          </button>
+        </div>
+
+        <!-- Venue / Map Card -->
+        <div class="venue-map-card" id="venueMapCard">
+          <div class="map-image-wrapper">
+            <img src="/assets/venue_map_crop.png" alt="Venue Map" id="venueMapImg" class="map-img">
+            <div class="map-pin">
+              <span class="pin-badge">Arrow</span>
+            </div>
+          </div>
+          <div class="venue-info-bar">
+            <div class="venue-text">
+              <strong id="venueNameText">Arrow</strong>
+              <span id="venueCityText">Allentown, PA</span>
+            </div>
+            <a href="https://maps.google.com" target="_blank" class="directions-link">Directions &rsaquo;</a>
+          </div>
+        </div>
+
+        <!-- Bottom Spacing for smooth scrolling -->
+        <div class="bottom-spacer"></div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TRANSFER BOTTOM SHEET MODAL (Exact Flow)       -->
+      <!-- ============================================== -->
+      <div class="modal-backdrop" id="transferBackdrop"></div>
+
+      <div class="bottom-sheet" id="transferModal">
+        <div class="sheet-drag-handle"></div>
+
+        <!-- STEP 1: SELECT TICKETS TO TRANSFER -->
+        <div class="sheet-step" id="stepSelectTickets">
+          <div class="sheet-header">
+            <h2 class="sheet-title">SELECT TICKETS TO TRANSFER</h2>
+            <button class="sheet-close-btn" id="sheetCloseBtn1" aria-label="Close transfer">&times;</button>
+          </div>
+
+          <div class="safety-notice">
+            <div class="notice-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <p class="notice-text">
+              Only transfer tickets to people you know and trust to ensure everyone stays safe
+            </p>
+          </div>
+
+          <div class="section-row-header">
+            <div class="section-row-info">
+              <strong id="sheetSecRowText">Sec Floor, Row 0</strong>
+            </div>
+            <div class="ticket-total-count" id="sheetTicketTotalBadge">
+              <span class="ticket-icon-glyph">♦</span>
+              <span id="sheetTicketTotalCount">4 tickets</span>
+            </div>
+          </div>
+
+          <!-- Horizontal Seat Selection Cards -->
+          <div class="seat-cards-carousel" id="seatCardsCarousel">
+            <!-- Seat cards rendered by JS -->
+          </div>
+
+          <!-- Step 1 Footer -->
+          <div class="sheet-footer">
+            <div class="selected-count-label" id="selectedCountLabel">
+              0 Selected
+            </div>
+            <button class="transfer-to-btn" id="transferToBtn" disabled>
+              TRANSFER TO &gt;
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: TRANSFER TO (Choose Method) -->
+        <div class="sheet-step hidden" id="stepTransferTo">
+          <div class="sheet-header">
+            <h2 class="sheet-title">TRANSFER TO</h2>
+            <button class="sheet-close-btn" id="sheetCloseBtn2" aria-label="Close transfer">&times;</button>
+          </div>
+
+          <div class="transfer-options-list">
+            <button class="transfer-option-item" id="optSelectContacts">
+              <span class="opt-label">Select From Contacts</span>
+              <span class="opt-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </span>
+            </button>
+
+            <button class="transfer-option-item" id="optManualRecipient">
+              <span class="opt-label">Manually Enter A Recipient</span>
+              <span class="opt-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              </span>
+            </button>
+          </div>
+
+          <!-- Send Icon Illustration -->
+          <div class="send-illustration-box">
+            <div class="send-plane-circle">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </div>
+            <h3 class="send-heading">Transfer Tickets Via Email or Text Message</h3>
+            <p class="send-subtext">Select an Email or mobile number to transfer tickets to your recipient.</p>
+          </div>
+
+          <!-- Step 2 Footer Back Button -->
+          <div class="sheet-footer simple-footer">
+            <button class="text-link-btn" id="backToStep1Btn">&lt; BACK</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: TRANSFER TICKETS (Form Inputs) -->
+        <div class="sheet-step hidden" id="stepTransferForm">
+          <div class="sheet-header">
+            <h2 class="sheet-title">TRANSFER TICKETS</h2>
+            <button class="sheet-close-btn" id="sheetCloseBtn3" aria-label="Close transfer">&times;</button>
+          </div>
+
+          <div class="form-selection-summary">
+            <h3 class="form-selected-title" id="formSelectedTitle">4 Tickets Selected</h3>
+            <p class="form-selected-subtitle" id="formSelectedSubtitle">Sec Floor Row 0 Seat</p>
+          </div>
+
+          <form id="transferForm" class="recipient-form" onsubmit="return false;">
+            <div class="form-group">
+              <label for="inputFirstName" class="form-label">First Name</label>
+              <input type="text" id="inputFirstName" class="form-input" placeholder="First Name" required>
+            </div>
+
+            <div class="form-group">
+              <label for="inputLastName" class="form-label">Last Name</label>
+              <input type="text" id="inputLastName" class="form-input" placeholder="Last Name" required>
+            </div>
+
+            <div class="form-group">
+              <label for="inputEmailOrPhone" class="form-label">Email or Mobile Number</label>
+              <input type="text" id="inputEmailOrPhone" class="form-input" placeholder="Email or Mobile Number" required>
+            </div>
+
+            <div class="form-group">
+              <label for="inputNote" class="form-label">Note</label>
+              <textarea id="inputNote" class="form-textarea" placeholder="Note" rows="3"></textarea>
+            </div>
+
+            <div class="form-actions-bar">
+              <button type="button" class="back-link" id="backToStep2Btn">&lt; BACK</button>
+              <button type="submit" class="submit-transfer-btn" id="submitTransferBtn">
+                TRANSFER 4 TICKETS
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 4: SENDING / TRANSFER PROCESSING -->
+        <div class="sheet-step hidden" id="stepSending">
+          <div class="transferring-loader">
+            <div class="tm-spinner"></div>
+            <h3 class="loading-title">Transferring Tickets...</h3>
+            <p class="loading-sub">Securing tickets and sending transfer link to recipient.</p>
+          </div>
+        </div>
+
+        <!-- STEP 5: TRANSFER SUCCESS CONFIRMATION -->
+        <div class="sheet-step hidden" id="stepSuccess">
+          <div class="success-box">
+            <div class="success-icon-badge">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h3 class="success-title">Transfer Sent!</h3>
+            <p class="success-message" id="successMessageText">
+              We've notified <strong id="successRecipientName">Recipient</strong> with instructions to claim the tickets.
+            </p>
+            <div class="transferred-summary-card">
+              <div class="summary-line">
+                <span>Tickets:</span>
+                <strong id="successTicketList">Seat 1, Seat 2, Seat 3, Seat 4</strong>
+              </div>
+              <div class="summary-line">
+                <span>Sent to:</span>
+                <strong id="successRecipientContact">contact@example.com</strong>
+              </div>
+              <div class="summary-line">
+                <span>Status:</span>
+                <span class="status-pill pending">Pending Acceptance</span>
+              </div>
+            </div>
+            <button class="tm-btn primary-btn done-btn" id="finishTransferBtn">
+              Done
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================== -->
+      <!-- TICKET DETAILS MODAL (SafeTix Barcode, Order)  -->
+      <!-- ============================================== -->
+      <div class="modal-backdrop" id="detailsBackdrop"></div>
+      <div class="bottom-sheet details-sheet" id="detailsModal">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Ticket Details</h2>
+          <button class="sheet-close-btn" id="closeDetailsBtn">&times;</button>
+        </div>
+        <div class="details-body" id="detailsBody">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
