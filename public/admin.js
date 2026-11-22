@@ -95,6 +95,7 @@ async function loadAdminData() {
     populateForm(currentEvent);
     renderTicketsTable(tickets);
     renderTransfersTable(transfers);
+    applyCurrentFavicon(currentEvent);
   } catch (err) {
     console.error('Error loading admin data:', err);
   }
@@ -342,4 +343,118 @@ function showAlert(msg) {
   setTimeout(() => {
     alertEl.style.display = 'none';
   }, 4000);
+}
+
+// ================================================================
+// FAVICON MANAGEMENT
+// ================================================================
+
+let pendingFaviconDataUrl = null;
+
+// Called on loadAdminData — show the current favicon from the database
+function applyCurrentFavicon(event) {
+  const previewImg = document.getElementById('faviconPreviewImg');
+  const emptyLabel = document.getElementById('faviconEmptyLabel');
+  const clearBtn = document.getElementById('clearFaviconBtn');
+
+  if (event && event.favicon_url) {
+    previewImg.src = event.favicon_url;
+    previewImg.style.display = 'block';
+    if (emptyLabel) emptyLabel.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+    // Also apply to the admin tab itself
+    setTabFavicon(event.favicon_url);
+  } else {
+    previewImg.style.display = 'none';
+    if (emptyLabel) emptyLabel.style.display = 'block';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+}
+
+function setTabFavicon(url) {
+  let link = document.querySelector("link[rel~='icon']");
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  link.href = url;
+}
+
+// Preview the chosen file before saving
+function previewFavicon(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const nameEl = document.getElementById('faviconFileName');
+  const saveBtn = document.getElementById('saveFaviconBtn');
+  nameEl.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingFaviconDataUrl = e.target.result;
+
+    const previewImg = document.getElementById('faviconPreviewImg');
+    const emptyLabel = document.getElementById('faviconEmptyLabel');
+    previewImg.src = pendingFaviconDataUrl;
+    previewImg.style.display = 'block';
+    if (emptyLabel) emptyLabel.style.display = 'none';
+
+    saveBtn.removeAttribute('disabled');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Save the pending favicon to Supabase via API
+async function saveFavicon() {
+  if (!pendingFaviconDataUrl) return;
+
+  try {
+    const res = await fetch('/api/favicon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ faviconUrl: pendingFaviconDataUrl })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save favicon');
+
+    // Apply instantly to this tab
+    setTabFavicon(pendingFaviconDataUrl);
+    document.getElementById('clearFaviconBtn').style.display = 'inline-flex';
+    document.getElementById('saveFaviconBtn').setAttribute('disabled', 'true');
+    document.getElementById('faviconFileName').textContent = '✅ Favicon saved to Supabase.';
+    pendingFaviconDataUrl = null;
+
+    showAlert('Favicon updated! It will appear on the ticket website automatically.');
+  } catch (err) {
+    alert('Error saving favicon: ' + err.message);
+  }
+}
+
+// Clear the favicon from the database
+async function clearFavicon() {
+  if (!confirm('Remove the custom favicon and restore the default browser icon?')) return;
+
+  try {
+    const res = await fetch('/api/favicon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ faviconUrl: '' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+
+    const previewImg = document.getElementById('faviconPreviewImg');
+    const emptyLabel = document.getElementById('faviconEmptyLabel');
+    previewImg.style.display = 'none';
+    if (emptyLabel) emptyLabel.style.display = 'block';
+    document.getElementById('clearFaviconBtn').style.display = 'none';
+    document.getElementById('faviconFileName').textContent = 'No file selected.';
+    document.getElementById('faviconFileInput').value = '';
+    pendingFaviconDataUrl = null;
+
+    showAlert('Favicon removed.');
+  } catch (err) {
+    alert('Error removing favicon: ' + err.message);
+  }
 }

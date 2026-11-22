@@ -1,7 +1,19 @@
 /**
  * Ticketmaster Mobile Ticket & Transfer Experience
- * Connects to SQLite Backend API
+ * Connects to Supabase Backend API via Express
  */
+
+// Apply favicon from database if present
+function applyFavicon(url) {
+  if (!url) return;
+  let link = document.querySelector("link[rel~='icon']");
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  link.href = url;
+}
 
 // Application State
 let eventData = null;
@@ -92,7 +104,7 @@ function updateStatusClock() {
   }
 }
 
-// Fetch event and ticket data from SQLite database
+// Fetch event and ticket data from Supabase database
 async function loadData() {
   try {
     const [eventRes, ticketsRes] = await Promise.all([
@@ -102,6 +114,9 @@ async function loadData() {
 
     eventData = await eventRes.json();
     ticketsList = await ticketsRes.json();
+
+    // Apply favicon from DB if set
+    if (eventData.favicon_url) applyFavicon(eventData.favicon_url);
 
     renderUI();
   } catch (err) {

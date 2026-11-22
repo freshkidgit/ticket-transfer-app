@@ -458,6 +458,50 @@
       </div>
     </div>
 
+    <!-- Favicon Manager Card -->
+    <div class="card" id="faviconCard">
+      <h2 class="card-title">🖼️ Site Favicon Manager</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+        Upload a <code>.ico</code>, <code>.png</code>, or <code>.svg</code> file to replace the tab icon on the ticket website and admin panel. Changes save to Supabase instantly.
+      </p>
+
+      <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+        <!-- Current Favicon Preview -->
+        <div>
+          <label style="margin-bottom:8px;display:block;">Current Favicon</label>
+          <div id="faviconPreviewBox" style="
+            width:72px;height:72px;
+            background:#0f172a;border:2px dashed var(--border);
+            border-radius:12px;display:flex;align-items:center;justify-content:center;
+            overflow:hidden;position:relative;
+          ">
+            <img id="faviconPreviewImg" src="" alt="" style="width:48px;height:48px;object-fit:contain;display:none;">
+            <span id="faviconEmptyLabel" style="font-size:28px;">🌐</span>
+          </div>
+        </div>
+
+        <!-- Upload Controls -->
+        <div style="flex:1;min-width:220px;">
+          <label for="faviconFileInput" style="margin-bottom:8px;display:block;">Upload New Favicon</label>
+          <input type="file" id="faviconFileInput" accept=".ico,.png,.svg,.jpg,.jpeg,.gif,.webp"
+            style="display:none;" onchange="previewFavicon(this)">
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('faviconFileInput').click();">
+              📂 Choose File
+            </button>
+            <button type="button" class="btn btn-primary" id="saveFaviconBtn" disabled onclick="saveFavicon()">
+              💾 Save Favicon
+            </button>
+            <button type="button" class="btn btn-danger" id="clearFaviconBtn" onclick="clearFavicon()" style="display:none;">
+              🗑️ Remove
+            </button>
+          </div>
+          <p id="faviconFileName" style="font-size:12px;color:var(--text-muted);margin-top:8px;">No file selected.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Transfer History Logs Table -->
     <div class="card">
       <h2 class="card-title">📬 Transfer History Logs (transfers table)</h2>

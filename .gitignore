@@ -10,5 +10,10 @@ check_*.png
 conan_wikimedia.jpg
 conan_memories.jpg
 conan_deezer.jpg
+conan_banner.jpg
+index.html
+tickets.db
 .npm/
 .DS_Store
+.env
+.env.local
