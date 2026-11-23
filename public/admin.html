@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ticket Database & Event Settings Manager</title>
+  <title>Admin & Database Manager</title>
+  <link rel="icon" href="/assets/favicon.ico" id="site-favicon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,9 +12,9 @@
     :root {
       --primary: #026cdf;
       --primary-hover: #0257b4;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --border: #334155;
+      --bg: #0b0f17;
+      --card-bg: #151c28;
+      --border: #243042;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --danger: #ef4444;
@@ -32,11 +33,81 @@
       color: var(--text);
       padding: 24px 16px;
       line-height: 1.5;
+      min-height: 100vh;
     }
 
+    /* Lock Screen Overlay */
+    #adminLockOverlay {
+      position: fixed;
+      inset: 0;
+      background-color: #0b0f17;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .lock-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    }
+
+    .lock-icon-lg {
+      font-size: 38px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+
+    .lock-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .lock-sub {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .lock-input {
+      width: 100%;
+      background: #080b10;
+      border: 1.5px solid var(--border);
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 22px;
+      text-align: center;
+      letter-spacing: 6px;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    .lock-input:focus {
+      border-color: var(--primary);
+    }
+
+    .lock-error {
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 600;
+      height: 20px;
+      margin-bottom: 12px;
+    }
+
+    /* Admin Container */
     .container {
-      max-width: 1000px;
+      max-width: 1040px;
       margin: 0 auto;
+      display: none; /* hidden until unlocked */
     }
 
     header {
@@ -51,7 +122,7 @@
     }
 
     .brand-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       display: flex;
       align-items: center;
@@ -70,6 +141,7 @@
     .header-links {
       display: flex;
       gap: 10px;
+      align-items: center;
     }
 
     .btn {
@@ -101,7 +173,7 @@
     }
 
     .btn-secondary:hover {
-      background-color: #475569;
+      background-color: #3b485d;
     }
 
     .btn-danger {
@@ -119,7 +191,7 @@
       gap: 24px;
     }
 
-    @media (max-width: 820px) {
+    @media (max-width: 840px) {
       .grid-layout {
         grid-template-columns: 1fr;
       }
@@ -150,12 +222,12 @@
     }
 
     .preset-pill {
-      background: #0f172a;
+      background: #0b0f17;
       border: 1px solid var(--border);
       color: #cbd5e1;
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 20px;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
@@ -184,7 +256,7 @@
     input[type="datetime-local"],
     select {
       width: 100%;
-      background: #0f172a;
+      background: #0b0f17;
       border: 1px solid var(--border);
       color: var(--text);
       padding: 10px 14px;
@@ -204,19 +276,52 @@
       gap: 12px;
     }
 
+    /* Background Image Upload Box */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      background: #0b0f17;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--primary);
+      background: #0f1622;
+    }
+
     .preview-image-box {
       margin-top: 10px;
-      height: 120px;
+      height: 150px;
       border-radius: 8px;
       overflow: hidden;
-      background: #0f172a;
+      background: #0b0f17;
       border: 1px solid var(--border);
+      position: relative;
     }
 
     .preview-image-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    /* Real Map Preview */
+    .map-preview-box {
+      margin-top: 10px;
+      height: 160px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .map-preview-box iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
 
     /* Table */
@@ -265,10 +370,6 @@
       cursor: pointer;
     }
 
-    .action-link:hover {
-      text-decoration: underline;
-    }
-
     .alert {
       padding: 12px 16px;
       border-radius: 8px;
@@ -286,17 +387,36 @@
 </head>
 <body>
 
-  <div class="container">
+  <!-- ADMIN LOCK SCREEN (Password: 12345) -->
+  <div id="adminLockOverlay">
+    <div class="lock-card">
+      <span class="lock-icon-lg">🔒</span>
+      <h2 class="lock-title">Admin Dashboard</h2>
+      <p class="lock-sub">Enter passcode to access event and database controls</p>
+      <form id="adminLockForm" onsubmit="verifyAdminPasscode(event)">
+        <input type="password" id="adminPassInput" class="lock-input" placeholder="•••••" maxlength="10" autofocus>
+        <p id="adminLockError" class="lock-error"></p>
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+          Unlock Dashboard
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN ADMIN DASHBOARD (Protected) -->
+  <div class="container" id="adminMainContainer">
     <header>
       <div class="brand-title">
-        <span>🎟️ Ticket Database Manager</span>
-        <span class="db-badge">SQLite: tickets.db</span>
+        <span>🎟️ Event & Database Manager</span>
+        <span class="db-badge">Supabase Connected</span>
       </div>
       <div class="header-links">
-        <a href="/" class="btn btn-primary" target="_blank">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          Open Ticket Website
+        <a href="/" class="btn btn-secondary">
+          👁️ View Ticket Page
         </a>
+        <button type="button" class="btn btn-danger" onclick="logoutAdmin()">
+          🔒 Lock / Log Out
+        </button>
       </div>
     </header>
 
@@ -312,16 +432,16 @@
         <button class="preset-pill" onclick="applyPreset('drake')">Drake | It's All A Blur</button>
       </div>
       <p style="font-size: 13px; color: var(--text-muted);">
-        Click a preset to quickly fill the database or customize any detail below.
+        Select any preset or customize the real event details, file background image, and real Google Map below.
       </p>
     </div>
 
     <form id="eventForm" onsubmit="saveEventData(event)">
       <div class="grid-layout">
         
-        <!-- Left Column: Event & Performer Details -->
+        <!-- Left Column: Event & Background Image Upload -->
         <div class="card">
-          <h2 class="card-title">🎤 Performer & Event Info</h2>
+          <h2 class="card-title">🎤 Performer & Background Image</h2>
 
           <div class="form-group">
             <label for="artist_name">Artist / Performer Name</label>
@@ -338,17 +458,6 @@
             <input type="text" id="badge_text" value="Verified Fan Onsale">
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="venue_name">Venue Name</label>
-              <input type="text" id="venue_name" required>
-            </div>
-            <div class="form-group">
-              <label for="venue_city">City, State</label>
-              <input type="text" id="venue_city" required>
-            </div>
-          </div>
-
           <div class="form-group">
             <label for="event_date">Event Date Display Text</label>
             <input type="text" id="event_date" placeholder="Sat, Aug 15, 7:00 PM" required>
@@ -357,23 +466,54 @@
           <div class="form-group">
             <label for="countdown_target">Countdown Target Date & Time</label>
             <input type="datetime-local" id="countdown_target" required>
-            <small style="color: var(--text-muted); font-size: 11.5px; display: block; margin-top: 4px;">
-              The live ticket countdown will tick down to this exact moment.
-            </small>
           </div>
 
+          <!-- File Upload for Background Image -->
           <div class="form-group">
-            <label for="artist_image">Artist Banner Image Path / URL</label>
-            <input type="text" id="artist_image" onchange="updateImagePreview()">
+            <label>🖼️ Ticket Background Image (Upload Any File)</label>
+            <input type="file" id="bgFileInput" accept="image/*" style="display: none;" onchange="handleBgFileUpload(this)">
+            
+            <div class="upload-zone" onclick="document.getElementById('bgFileInput').click()">
+              <p style="font-size: 14px; font-weight: 700; color: #38bdf8; margin-bottom: 4px;">
+                📁 Click to Upload Any Background Image File
+              </p>
+              <p style="font-size: 12px; color: var(--text-muted);">
+                Supports PNG, JPG, JPEG, WEBP files
+              </p>
+            </div>
+
+            <input type="text" id="artist_image" placeholder="Or enter image URL here" onchange="updateImagePreview()" style="margin-top: 8px;">
+
             <div class="preview-image-box">
               <img id="imgPreview" src="/assets/conan_banner.jpg" alt="Preview">
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Seating, Pricing & Tickets -->
+        <!-- Right Column: Real Google Maps Location & Seating -->
         <div class="card">
-          <h2 class="card-title">🎟️ Seating, Pricing & Ticket Setup</h2>
+          <h2 class="card-title">📍 Real Google Maps Event Location</h2>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="venue_name">Venue Name</label>
+              <input type="text" id="venue_name" oninput="updateMapPreview()" required>
+            </div>
+            <div class="form-group">
+              <label for="venue_city">City, State / Address</label>
+              <input type="text" id="venue_city" oninput="updateMapPreview()" required>
+            </div>
+          </div>
+
+          <!-- Real Interactive Map Preview -->
+          <div class="form-group">
+            <label>Live Google Maps Preview</label>
+            <div class="map-preview-box">
+              <iframe id="adminMapIframe" src="about:blank"></iframe>
+            </div>
+          </div>
+
+          <h2 class="card-title" style="margin-top: 24px;">🎟️ Seating & Pricing</h2>
 
           <div class="form-row">
             <div class="form-group">
@@ -422,9 +562,9 @@
             </div>
           </div>
 
-          <div style="margin-top: 32px; display: flex; gap: 10px;">
+          <div style="margin-top: 24px; display: flex; gap: 10px;">
             <button type="submit" class="btn btn-primary" style="flex: 1;">
-              Save Database Changes
+              💾 Save All Changes
             </button>
             <button type="button" class="btn btn-danger" onclick="resetAllTickets()">
               Reset Tickets
@@ -435,9 +575,48 @@
       </div>
     </form>
 
-    <!-- Database Ticket Inventory Table -->
+    <!-- Site Favicon Manager Card -->
+    <div class="card" id="faviconCard">
+      <h2 class="card-title">🖼️ Site Favicon Manager</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+        Upload any <code>.ico</code>, <code>.png</code>, or <code>.svg</code> file to change the tab icon on the website.
+      </p>
+
+      <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+        <div>
+          <label style="margin-bottom:8px;display:block;">Current Favicon</label>
+          <div id="faviconPreviewBox" style="
+            width:64px;height:64px;
+            background:#0b0f17;border:2px dashed var(--border);
+            border-radius:12px;display:flex;align-items:center;justify-content:center;
+            overflow:hidden;
+          ">
+            <img id="faviconPreviewImg" src="" alt="" style="width:40px;height:40px;object-fit:contain;display:none;">
+            <span id="faviconEmptyLabel" style="font-size:24px;">🌐</span>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:220px;">
+          <input type="file" id="faviconFileInput" accept="image/*" style="display:none;" onchange="previewFavicon(this)">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('faviconFileInput').click();">
+              📂 Choose Favicon File
+            </button>
+            <button type="button" class="btn btn-primary" id="saveFaviconBtn" disabled onclick="saveFavicon()">
+              💾 Save Favicon
+            </button>
+            <button type="button" class="btn btn-danger" id="clearFaviconBtn" onclick="clearFavicon()" style="display:none;">
+              🗑️ Remove
+            </button>
+          </div>
+          <p id="faviconFileName" style="font-size:12px;color:var(--text-muted);margin-top:8px;">No file chosen.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Ticket Inventory Table -->
     <div class="card">
-      <h2 class="card-title">📋 Live Ticket Inventory (tickets table)</h2>
+      <h2 class="card-title">📋 Live Ticket Inventory (Supabase tickets table)</h2>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -458,53 +637,9 @@
       </div>
     </div>
 
-    <!-- Favicon Manager Card -->
-    <div class="card" id="faviconCard">
-      <h2 class="card-title">🖼️ Site Favicon Manager</h2>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-        Upload a <code>.ico</code>, <code>.png</code>, or <code>.svg</code> file to replace the tab icon on the ticket website and admin panel. Changes save to Supabase instantly.
-      </p>
-
-      <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
-        <!-- Current Favicon Preview -->
-        <div>
-          <label style="margin-bottom:8px;display:block;">Current Favicon</label>
-          <div id="faviconPreviewBox" style="
-            width:72px;height:72px;
-            background:#0f172a;border:2px dashed var(--border);
-            border-radius:12px;display:flex;align-items:center;justify-content:center;
-            overflow:hidden;position:relative;
-          ">
-            <img id="faviconPreviewImg" src="" alt="" style="width:48px;height:48px;object-fit:contain;display:none;">
-            <span id="faviconEmptyLabel" style="font-size:28px;">🌐</span>
-          </div>
-        </div>
-
-        <!-- Upload Controls -->
-        <div style="flex:1;min-width:220px;">
-          <label for="faviconFileInput" style="margin-bottom:8px;display:block;">Upload New Favicon</label>
-          <input type="file" id="faviconFileInput" accept=".ico,.png,.svg,.jpg,.jpeg,.gif,.webp"
-            style="display:none;" onchange="previewFavicon(this)">
-
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-secondary" onclick="document.getElementById('faviconFileInput').click();">
-              📂 Choose File
-            </button>
-            <button type="button" class="btn btn-primary" id="saveFaviconBtn" disabled onclick="saveFavicon()">
-              💾 Save Favicon
-            </button>
-            <button type="button" class="btn btn-danger" id="clearFaviconBtn" onclick="clearFavicon()" style="display:none;">
-              🗑️ Remove
-            </button>
-          </div>
-          <p id="faviconFileName" style="font-size:12px;color:var(--text-muted);margin-top:8px;">No file selected.</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Transfer History Logs Table -->
     <div class="card">
-      <h2 class="card-title">📬 Transfer History Logs (transfers table)</h2>
+      <h2 class="card-title">📬 Transfer History Logs</h2>
       <div style="overflow-x: auto;">
         <table>
           <thead>

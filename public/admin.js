@@ -1,5 +1,6 @@
 /**
  * Admin Panel & Database Manager JavaScript
+ * Protected by Passcode: 12345
  */
 
 let currentEvent = null;
@@ -76,10 +77,55 @@ const presets = {
   }
 };
 
+// ================================================================
+// PASSCODE AUTHENTICATION (Password: 12345)
+// ================================================================
 document.addEventListener('DOMContentLoaded', () => {
-  loadAdminData();
+  checkAuth();
 });
 
+function checkAuth() {
+  const isAuth = sessionStorage.getItem('tm_admin_auth') === '12345';
+  const lockOverlay = document.getElementById('adminLockOverlay');
+  const mainContainer = document.getElementById('adminMainContainer');
+
+  if (isAuth) {
+    if (lockOverlay) lockOverlay.style.display = 'none';
+    if (mainContainer) mainContainer.style.display = 'block';
+    loadAdminData();
+  } else {
+    if (lockOverlay) lockOverlay.style.display = 'flex';
+    if (mainContainer) mainContainer.style.display = 'none';
+    const passInput = document.getElementById('adminPassInput');
+    if (passInput) passInput.focus();
+  }
+}
+
+function verifyAdminPasscode(e) {
+  e.preventDefault();
+  const input = document.getElementById('adminPassInput');
+  const errorEl = document.getElementById('adminLockError');
+  const val = input.value.trim();
+
+  // Password requirement: 12345
+  if (val === '12345') {
+    sessionStorage.setItem('tm_admin_auth', '12345');
+    errorEl.textContent = '';
+    checkAuth();
+  } else {
+    errorEl.textContent = 'Incorrect passcode.';
+    input.select();
+  }
+}
+
+function logoutAdmin() {
+  sessionStorage.removeItem('tm_admin_auth');
+  checkAuth();
+}
+
+// ================================================================
+// LOAD DATA FROM SUPABASE
+// ================================================================
 async function loadAdminData() {
   try {
     const [eventRes, ticketsRes, transfersRes] = await Promise.all([
@@ -118,7 +164,6 @@ function populateForm(event) {
   document.getElementById('artist_image').value = event.artist_image || '/assets/conan_banner.jpg';
   document.getElementById('ticket_count').value = String(event.ticket_count || 4);
 
-  // Format countdown target for input[type="datetime-local"]
   if (event.countdown_target) {
     const dt = new Date(event.countdown_target);
     const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
@@ -126,6 +171,24 @@ function populateForm(event) {
   }
 
   updateImagePreview();
+  updateMapPreview();
+}
+
+// ================================================================
+// FILE UPLOAD FOR BACKGROUND IMAGE
+// ================================================================
+function handleBgFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    document.getElementById('artist_image').value = dataUrl;
+    updateImagePreview();
+    showAlert('Image uploaded! Click "Save All Changes" to sync to Supabase.');
+  };
+  reader.readAsDataURL(file);
 }
 
 function updateImagePreview() {
@@ -136,14 +199,29 @@ function updateImagePreview() {
   }
 }
 
+// ================================================================
+// REAL GOOGLE MAPS PREVIEW
+// ================================================================
+function updateMapPreview() {
+  const venue = document.getElementById('venue_name').value.trim();
+  const city = document.getElementById('venue_city').value.trim();
+  const query = `${venue || 'Arrow'}, ${city || 'Allentown, PA'}`;
+  const iframe = document.getElementById('adminMapIframe');
+  if (iframe) {
+    iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+}
+
+// ================================================================
+// PRESETS
+// ================================================================
 function applyPreset(key) {
   const p = presets[key];
   if (!p) return;
 
   document.querySelectorAll('.preset-pill').forEach(pill => pill.classList.remove('active'));
-  event.target.classList.add('active');
+  if (event && event.target) event.target.classList.add('active');
 
-  // Set 3 days from now for countdown
   const targetDate = new Date(Date.now() + (3 * 86400 + 5 * 3600 + 48 * 60 + 31) * 1000);
   const localIso = new Date(targetDate.getTime() - targetDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   document.getElementById('countdown_target').value = localIso;
@@ -164,8 +242,12 @@ function applyPreset(key) {
   document.getElementById('ticket_count').value = String(p.ticket_count);
 
   updateImagePreview();
+  updateMapPreview();
 }
 
+// ================================================================
+// SAVE EVENT TO SUPABASE
+// ================================================================
 async function saveEventData(e) {
   e.preventDefault();
 
@@ -199,16 +281,17 @@ async function saveEventData(e) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to save');
 
-    showAlert('Database updated successfully! All ticket pages are now synced.');
+    showAlert('All changes saved to Supabase! The ticket website is updated.');
     loadAdminData();
   } catch (err) {
     alert('Error saving event: ' + err.message);
   }
 }
 
+// Update ticket count
 async function updateTicketCount() {
   const count = parseInt(document.getElementById('ticket_count').value, 10);
-  if (!confirm(`Update total tickets to ${count}? This will recreate the tickets in the database.`)) return;
+  if (!confirm(`Update total tickets to ${count}? This will recreate the tickets in Supabase.`)) return;
 
   try {
     const res = await fetch('/api/tickets/update-count', {
@@ -218,7 +301,7 @@ async function updateTicketCount() {
     });
     const data = await res.json();
     if (data.success) {
-      showAlert(`Ticket inventory updated to ${count} tickets.`);
+      showAlert(`Ticket inventory updated to ${count} tickets in Supabase.`);
       loadAdminData();
     }
   } catch (err) {
@@ -226,6 +309,7 @@ async function updateTicketCount() {
   }
 }
 
+// Reset all tickets
 async function resetAllTickets() {
   if (!confirm('Reset all tickets and delete transfer history?')) return;
   try {
@@ -240,6 +324,7 @@ async function resetAllTickets() {
   }
 }
 
+// Cancel transfer
 async function cancelTransfer(ticketId) {
   if (!confirm('Cancel transfer for this ticket?')) return;
   try {
@@ -336,22 +421,9 @@ async function cancelBatchTransfer(transferId) {
   }
 }
 
-function showAlert(msg) {
-  const alertEl = document.getElementById('statusAlert');
-  alertEl.textContent = msg;
-  alertEl.style.display = 'block';
-  setTimeout(() => {
-    alertEl.style.display = 'none';
-  }, 4000);
-}
-
-// ================================================================
-// FAVICON MANAGEMENT
-// ================================================================
-
+// Favicon Management
 let pendingFaviconDataUrl = null;
 
-// Called on loadAdminData — show the current favicon from the database
 function applyCurrentFavicon(event) {
   const previewImg = document.getElementById('faviconPreviewImg');
   const emptyLabel = document.getElementById('faviconEmptyLabel');
@@ -362,7 +434,6 @@ function applyCurrentFavicon(event) {
     previewImg.style.display = 'block';
     if (emptyLabel) emptyLabel.style.display = 'none';
     if (clearBtn) clearBtn.style.display = 'inline-flex';
-    // Also apply to the admin tab itself
     setTabFavicon(event.favicon_url);
   } else {
     previewImg.style.display = 'none';
@@ -372,16 +443,16 @@ function applyCurrentFavicon(event) {
 }
 
 function setTabFavicon(url) {
-  let link = document.querySelector("link[rel~='icon']");
+  let link = document.getElementById('site-favicon');
   if (!link) {
     link = document.createElement('link');
+    link.id = 'site-favicon';
     link.rel = 'icon';
     document.head.appendChild(link);
   }
   link.href = url;
 }
 
-// Preview the chosen file before saving
 function previewFavicon(input) {
   const file = input.files[0];
   if (!file) return;
@@ -393,19 +464,16 @@ function previewFavicon(input) {
   const reader = new FileReader();
   reader.onload = (e) => {
     pendingFaviconDataUrl = e.target.result;
-
     const previewImg = document.getElementById('faviconPreviewImg');
     const emptyLabel = document.getElementById('faviconEmptyLabel');
     previewImg.src = pendingFaviconDataUrl;
     previewImg.style.display = 'block';
     if (emptyLabel) emptyLabel.style.display = 'none';
-
     saveBtn.removeAttribute('disabled');
   };
   reader.readAsDataURL(file);
 }
 
-// Save the pending favicon to Supabase via API
 async function saveFavicon() {
   if (!pendingFaviconDataUrl) return;
 
@@ -418,22 +486,20 @@ async function saveFavicon() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to save favicon');
 
-    // Apply instantly to this tab
     setTabFavicon(pendingFaviconDataUrl);
     document.getElementById('clearFaviconBtn').style.display = 'inline-flex';
     document.getElementById('saveFaviconBtn').setAttribute('disabled', 'true');
     document.getElementById('faviconFileName').textContent = '✅ Favicon saved to Supabase.';
     pendingFaviconDataUrl = null;
 
-    showAlert('Favicon updated! It will appear on the ticket website automatically.');
+    showAlert('Favicon updated successfully!');
   } catch (err) {
     alert('Error saving favicon: ' + err.message);
   }
 }
 
-// Clear the favicon from the database
 async function clearFavicon() {
-  if (!confirm('Remove the custom favicon and restore the default browser icon?')) return;
+  if (!confirm('Remove the custom favicon?')) return;
 
   try {
     const res = await fetch('/api/favicon', {
@@ -449,7 +515,7 @@ async function clearFavicon() {
     previewImg.style.display = 'none';
     if (emptyLabel) emptyLabel.style.display = 'block';
     document.getElementById('clearFaviconBtn').style.display = 'none';
-    document.getElementById('faviconFileName').textContent = 'No file selected.';
+    document.getElementById('faviconFileName').textContent = 'No file chosen.';
     document.getElementById('faviconFileInput').value = '';
     pendingFaviconDataUrl = null;
 
@@ -457,4 +523,13 @@ async function clearFavicon() {
   } catch (err) {
     alert('Error removing favicon: ' + err.message);
   }
+}
+
+function showAlert(msg) {
+  const alertEl = document.getElementById('statusAlert');
+  alertEl.textContent = msg;
+  alertEl.style.display = 'block';
+  setTimeout(() => {
+    alertEl.style.display = 'none';
+  }, 4000);
 }

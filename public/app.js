@@ -1,19 +1,7 @@
 /**
  * Ticketmaster Mobile Ticket & Transfer Experience
- * Connects to Supabase Backend API via Express
+ * Connects to Supabase Backend API
  */
-
-// Apply favicon from database if present
-function applyFavicon(url) {
-  if (!url) return;
-  let link = document.querySelector("link[rel~='icon']");
-  if (!link) {
-    link = document.createElement('link');
-    link.rel = 'icon';
-    document.head.appendChild(link);
-  }
-  link.href = url;
-}
 
 // Application State
 let eventData = null;
@@ -25,10 +13,11 @@ let countdownInterval = null;
 // DOM Elements
 const carouselTrack = document.getElementById('carouselTrack');
 const paginationDots = document.getElementById('paginationDots');
-const venueMapImg = document.getElementById('venueMapImg');
 const venueNameText = document.getElementById('venueNameText');
 const venueCityText = document.getElementById('venueCityText');
-const statusTime = document.getElementById('statusTime');
+const googleMapIframe = document.getElementById('googleMapIframe');
+const googleMapsDirectionsLink = document.getElementById('googleMapsDirectionsLink');
+const mapBadgeVenue = document.getElementById('mapBadgeVenue');
 
 // Transfer Sheet Elements
 const transferBackdrop = document.getElementById('transferBackdrop');
@@ -76,35 +65,37 @@ const detailsModal = document.getElementById('detailsModal');
 const detailsBody = document.getElementById('detailsBody');
 const closeDetailsBtn = document.getElementById('closeDetailsBtn');
 
-// Toolbar Controls
-const toggleDeviceBtn = document.getElementById('toggleDeviceBtn');
-const resetTicketsBtn = document.getElementById('resetTicketsBtn');
-const viewportWrapper = document.getElementById('viewportWrapper');
+// Secret Admin Access Elements
+const secretAdminTrigger = document.getElementById('secretAdminTrigger');
+const secretPinModal = document.getElementById('secretPinModal');
+const secretAuthBackdrop = document.getElementById('secretAuthBackdrop');
+const secretPinInput = document.getElementById('secretPinInput');
+const pinErrorMessage = document.getElementById('pinErrorMessage');
 
 // ====================================================
 // INITIALIZATION
 // ====================================================
 document.addEventListener('DOMContentLoaded', () => {
-  updateStatusClock();
-  setInterval(updateStatusClock, 30000);
-
   loadData();
   setupEventListeners();
   setupTouchCarousel();
+  setupSecretTrigger();
 });
 
-// Update the iPhone status bar clock to local time
-function updateStatusClock() {
-  const now = new Date();
-  let hours = now.getHours();
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  hours = hours % 12 || 12;
-  if (statusTime) {
-    statusTime.textContent = `${hours}:${minutes}`;
+// Apply custom favicon from database if present
+function applyFavicon(url) {
+  if (!url) return;
+  let link = document.getElementById('site-favicon');
+  if (!link) {
+    link = document.createElement('link');
+    link.id = 'site-favicon';
+    link.rel = 'icon';
+    document.head.appendChild(link);
   }
+  link.href = url;
 }
 
-// Fetch event and ticket data from Supabase database
+// Fetch event and ticket data from Supabase backend
 async function loadData() {
   try {
     const [eventRes, ticketsRes] = await Promise.all([
@@ -115,8 +106,9 @@ async function loadData() {
     eventData = await eventRes.json();
     ticketsList = await ticketsRes.json();
 
-    // Apply favicon from DB if set
-    if (eventData.favicon_url) applyFavicon(eventData.favicon_url);
+    if (eventData.favicon_url) {
+      applyFavicon(eventData.favicon_url);
+    }
 
     renderUI();
   } catch (err) {
@@ -133,7 +125,16 @@ function renderUI() {
   // Update venue info
   if (venueNameText) venueNameText.textContent = eventData.venue_name;
   if (venueCityText) venueCityText.textContent = eventData.venue_city;
-  if (venueMapImg && eventData.map_image) venueMapImg.src = eventData.map_image;
+  if (mapBadgeVenue) mapBadgeVenue.textContent = eventData.venue_name;
+
+  // Real Google Maps Integration
+  const locationQuery = `${eventData.venue_name || 'Arrow'}, ${eventData.venue_city || 'Allentown, PA'}`;
+  if (googleMapIframe) {
+    googleMapIframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+  if (googleMapsDirectionsLink) {
+    googleMapsDirectionsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`;
+  }
 
   // Render Carousel Cards
   renderCarousel();
@@ -150,7 +151,6 @@ function renderCarousel() {
   paginationDots.innerHTML = '';
 
   ticketsList.forEach((ticket, index) => {
-    // Build Card Slide
     const slide = document.createElement('div');
     slide.className = 'ticket-card-slide';
 
@@ -180,7 +180,7 @@ function renderCarousel() {
           </div>
         ` : ''}
 
-        <!-- Artist Hero Image -->
+        <!-- Artist Hero Image (uploaded file or default) -->
         <div class="card-artist-hero">
           <img src="${escapeHtml(eventData.artist_image || '/assets/conan_banner.jpg')}" alt="${escapeHtml(eventData.artist_name)}" class="hero-img">
           <div class="hero-gradient-overlay">
@@ -314,15 +314,13 @@ function startCountdown() {
 }
 
 // ====================================================
-// TRANSFER BOTTOM SHEET MODAL (Exact Flow)
+// TRANSFER BOTTOM SHEET MODAL
 // ====================================================
 function openTransferModal() {
   selectedTicketIds.clear();
 
-  // Reset steps
   showStep(stepSelectTickets);
 
-  // Update Section & Total count header
   if (sheetSecRowText) {
     sheetSecRowText.textContent = `Sec ${eventData.section || 'Floor'}, Row ${eventData.row_name || '0'}`;
   }
@@ -349,7 +347,6 @@ function showStep(targetStep) {
   if (targetStep) targetStep.classList.remove('hidden');
 }
 
-// Render the 4 seat selection cards
 function renderSeatSelectorCards() {
   seatCardsCarousel.innerHTML = '';
 
@@ -383,7 +380,6 @@ function toggleSeatSelection(ticketId) {
     selectedTicketIds.add(ticketId);
   }
 
-  // Update card visuals
   const cards = seatCardsCarousel.querySelectorAll('.seat-select-card');
   cards.forEach(card => {
     const id = parseInt(card.getAttribute('data-seat-id'), 10);
@@ -406,13 +402,11 @@ function updateSelectedCount() {
   }
 }
 
-// Transition to Step 2: "TRANSFER TO"
 function proceedToTransferTo() {
   if (selectedTicketIds.size === 0) return;
   showStep(stepTransferTo);
 }
 
-// Transition to Step 3: Recipient Form
 function proceedToRecipientForm() {
   const count = selectedTicketIds.size;
   formSelectedTitle.textContent = `${count} Ticket${count > 1 ? 's' : ''} Selected`;
@@ -427,7 +421,6 @@ function proceedToRecipientForm() {
   showStep(stepTransferForm);
 }
 
-// Submit Transfer Request
 async function submitTransfer() {
   const firstName = inputFirstName.value.trim();
   const lastName = inputLastName.value.trim();
@@ -457,7 +450,6 @@ async function submitTransfer() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Transfer failed');
 
-    // Show Success Step
     successRecipientName.textContent = `${firstName} ${lastName}`;
     successRecipientContact.textContent = emailOrPhone;
     
@@ -467,7 +459,6 @@ async function submitTransfer() {
       .join(', ');
     successTicketList.textContent = seatNumbers || `${selectedTicketIds.size} Seats`;
 
-    // Refresh tickets from server
     await loadData();
 
     setTimeout(() => {
@@ -480,7 +471,6 @@ async function submitTransfer() {
   }
 }
 
-// Cancel a pending transfer
 async function cancelTransfer(ticketId) {
   if (!confirm('Are you sure you want to cancel this transfer and keep the ticket?')) return;
 
@@ -511,7 +501,6 @@ function openDetailsModal(ticketId) {
   const total = (parseFloat(price) + parseFloat(fee)).toFixed(2);
 
   detailsBody.innerHTML = `
-    <!-- SafeTix Animated Barcode -->
     <div class="safetix-container">
       <div class="safetix-label">SafeTix™ Active Barcode</div>
       <div class="barcode-wrapper">
@@ -520,52 +509,18 @@ function openDetailsModal(ticketId) {
       <div class="barcode-number">${ticket.barcode_code || '8192 0481 0294 8102'}</div>
     </div>
 
-    <!-- Ticket Details Info Table -->
     <table class="details-table">
-      <tr>
-        <td>Event</td>
-        <td>${escapeHtml(eventData.artist_name)}</td>
-      </tr>
-      <tr>
-        <td>Date & Time</td>
-        <td>${escapeHtml(eventData.event_date)}</td>
-      </tr>
-      <tr>
-        <td>Venue</td>
-        <td>${escapeHtml(eventData.venue_name)}, ${escapeHtml(eventData.venue_city)}</td>
-      </tr>
-      <tr>
-        <td>Section</td>
-        <td>${escapeHtml(ticket.section || 'Floor')}</td>
-      </tr>
-      <tr>
-        <td>Row</td>
-        <td>${escapeHtml(ticket.row_name || '0')}</td>
-      </tr>
-      <tr>
-        <td>Seat</td>
-        <td>${escapeHtml(ticket.seat_number || 'General Admission')}</td>
-      </tr>
-      <tr>
-        <td>Order Number</td>
-        <td>${escapeHtml(eventData.order_number || '28-49201/PHL')}</td>
-      </tr>
-      <tr>
-        <td>Ticket Price</td>
-        <td>$${price}</td>
-      </tr>
-      <tr>
-        <td>Service Fee</td>
-        <td>$${fee}</td>
-      </tr>
-      <tr>
-        <td>Total Paid</td>
-        <td>$${total}</td>
-      </tr>
-      <tr>
-        <td>Status</td>
-        <td>${ticket.status === 'transfer_pending' ? 'Transfer Pending' : 'Valid for Entry'}</td>
-      </tr>
+      <tr><td>Event</td><td>${escapeHtml(eventData.artist_name)}</td></tr>
+      <tr><td>Date & Time</td><td>${escapeHtml(eventData.event_date)}</td></tr>
+      <tr><td>Venue</td><td>${escapeHtml(eventData.venue_name)}, ${escapeHtml(eventData.venue_city)}</td></tr>
+      <tr><td>Section</td><td>${escapeHtml(ticket.section || 'Floor')}</td></tr>
+      <tr><td>Row</td><td>${escapeHtml(ticket.row_name || '0')}</td></tr>
+      <tr><td>Seat</td><td>${escapeHtml(ticket.seat_number || 'General Admission')}</td></tr>
+      <tr><td>Order Number</td><td>${escapeHtml(eventData.order_number || '28-49201/PHL')}</td></tr>
+      <tr><td>Ticket Price</td><td>$${price}</td></tr>
+      <tr><td>Service Fee</td><td>$${fee}</td></tr>
+      <tr><td>Total Paid</td><td>$${total}</td></tr>
+      <tr><td>Status</td><td>${ticket.status === 'transfer_pending' ? 'Transfer Pending' : 'Valid for Entry'}</td></tr>
     </table>
   `;
 
@@ -579,26 +534,83 @@ function closeDetailsModal() {
 }
 
 // ====================================================
-// EVENT LISTENERS & SETUP
+// SECRET ADMIN ACCESS (Password: 12345)
+// ====================================================
+let triggerClickCount = 0;
+let triggerClickTimer = null;
+
+function setupSecretTrigger() {
+  if (!secretAdminTrigger) return;
+
+  // Secret: Tap/click the "My Tickets" header 3 times in 1.5 seconds
+  secretAdminTrigger.addEventListener('click', () => {
+    triggerClickCount++;
+    clearTimeout(triggerClickTimer);
+
+    if (triggerClickCount >= 3) {
+      triggerClickCount = 0;
+      openSecretAuth();
+    } else {
+      triggerClickTimer = setTimeout(() => {
+        triggerClickCount = 0;
+      }, 1500);
+    }
+  });
+
+  // Also support secret keyboard shortcut: Ctrl+Shift+A
+  window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+      e.preventDefault();
+      openSecretAuth();
+    }
+  });
+}
+
+function openSecretAuth() {
+  secretPinInput.value = '';
+  pinErrorMessage.textContent = '';
+  secretAuthBackdrop.classList.add('active');
+  secretPinModal.classList.add('active');
+  setTimeout(() => secretPinInput.focus(), 150);
+}
+
+function closeSecretAuth() {
+  secretAuthBackdrop.classList.remove('active');
+  secretPinModal.classList.remove('active');
+}
+
+function handleSecretAuth(e) {
+  e.preventDefault();
+  const enteredPin = secretPinInput.value.trim();
+
+  // Password requirement: 12345
+  if (enteredPin === '12345') {
+    sessionStorage.setItem('tm_admin_auth', '12345');
+    window.location.href = '/admin.html';
+  } else {
+    pinErrorMessage.textContent = 'Incorrect passcode.';
+    secretPinInput.select();
+  }
+}
+
+// ====================================================
+// EVENT LISTENERS
 // ====================================================
 function setupEventListeners() {
-  // Transfer Flow Open/Close
   if (transferBtn) transferBtn.onclick = openTransferModal;
   if (transferBackdrop) transferBackdrop.onclick = closeTransferModal;
   if (sheetCloseBtn1) sheetCloseBtn1.onclick = closeTransferModal;
   if (sheetCloseBtn2) sheetCloseBtn2.onclick = closeTransferModal;
   if (sheetCloseBtn3) sheetCloseBtn3.onclick = closeTransferModal;
 
-  // Step Transitions
   if (transferToBtn) transferToBtn.onclick = proceedToTransferTo;
   if (optManualRecipient) optManualRecipient.onclick = proceedToRecipientForm;
   if (optSelectContacts) {
     optSelectContacts.onclick = () => {
-      // Simulate quick contact fill
       inputFirstName.value = 'Alex';
       inputLastName.value = 'Rivera';
       inputEmailOrPhone.value = 'alex.rivera@icloud.com';
-      inputNote.value = 'Here are the Conan Gray tickets! See you at the show!';
+      inputNote.value = 'Conan Gray tickets!';
       proceedToRecipientForm();
     };
   }
@@ -607,55 +619,28 @@ function setupEventListeners() {
   if (backToStep2Btn) backToStep2Btn.onclick = () => showStep(stepTransferTo);
   if (finishTransferBtn) finishTransferBtn.onclick = closeTransferModal;
 
-  // Form submit
   if (transferForm) transferForm.onsubmit = submitTransfer;
 
-  // Details Modal Close
   if (closeDetailsBtn) closeDetailsBtn.onclick = closeDetailsModal;
   if (detailsBackdrop) detailsBackdrop.onclick = closeDetailsModal;
 
-  // Device Frame Toggle
-  if (toggleDeviceBtn) {
-    toggleDeviceBtn.onclick = () => {
-      const isFramed = viewportWrapper.classList.toggle('frame-mode');
-      toggleDeviceBtn.querySelector('.btn-text').textContent = isFramed ? 'Mobile Frame' : 'Full Screen';
-    };
-  }
+  if (secretAuthBackdrop) secretAuthBackdrop.onclick = closeSecretAuth;
 
-  // Reset Tickets Button
-  if (resetTicketsBtn) {
-    resetTicketsBtn.onclick = async () => {
-      if (!confirm('Reset all tickets to active and remove any transfers?')) return;
-      try {
-        const res = await fetch('/api/reset', { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-          await loadData();
-          alert('Tickets have been reset to original active state.');
-        }
-      } catch (err) {
-        alert('Reset failed: ' + err.message);
-      }
-    };
-  }
-
-  // Header Nav buttons
   const closeNavBtn = document.getElementById('closeNavBtn');
   if (closeNavBtn) {
     closeNavBtn.onclick = () => {
-      alert('My Tickets view closed. (Navigated to home)');
+      console.log('Close navigation clicked');
     };
   }
 
   const helpNavBtn = document.getElementById('helpNavBtn');
   if (helpNavBtn) {
     helpNavBtn.onclick = () => {
-      alert('Ticketmaster Support: For questions regarding ticket transfer, barcodes, and entry, visit our Help Center.');
+      alert('Ticketmaster Support: Contact customer assistance for transfer and order inquiries.');
     };
   }
 }
 
-// Helper: Escape HTML
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
