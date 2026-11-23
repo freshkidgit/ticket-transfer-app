@@ -82,17 +82,36 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSecretTrigger();
 });
 
-// Apply custom favicon from database if present
+// Apply custom favicon and home screen touch icons
 function applyFavicon(url) {
   if (!url) return;
-  let link = document.getElementById('site-favicon');
-  if (!link) {
-    link = document.createElement('link');
-    link.id = 'site-favicon';
-    link.rel = 'icon';
-    document.head.appendChild(link);
+
+  // Update browser tab favicon
+  const siteFavicon = document.getElementById('site-favicon');
+  if (siteFavicon) siteFavicon.href = url;
+
+  // Update iOS Home Screen Touch Icon
+  let appleIcon = document.getElementById('apple-touch-icon');
+  if (appleIcon) {
+    appleIcon.href = url;
+  } else {
+    appleIcon = document.createElement('link');
+    appleIcon.id = 'apple-touch-icon';
+    appleIcon.rel = 'apple-touch-icon';
+    appleIcon.href = url;
+    document.head.appendChild(appleIcon);
   }
-  link.href = url;
+
+  let applePrecomposed = document.getElementById('apple-touch-icon-precomposed');
+  if (applePrecomposed) {
+    applePrecomposed.href = url;
+  } else {
+    applePrecomposed = document.createElement('link');
+    applePrecomposed.id = 'apple-touch-icon-precomposed';
+    applePrecomposed.rel = 'apple-touch-icon-precomposed';
+    applePrecomposed.href = url;
+    document.head.appendChild(applePrecomposed);
+  }
 }
 
 // Fetch event and ticket data from Supabase backend

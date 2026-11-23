@@ -6,12 +6,66 @@ const cors = require('cors');
 const path = require('path');
 const supabase = require('./utils/supabase');
 
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+
+// ----------------------------------------------------------------
+// Dynamic Server-Side Injection for iOS Home Screen & Favicon
+// ----------------------------------------------------------------
+app.get(['/', '/index.html'], async (req, res, next) => {
+  try {
+    let faviconUrl = memoryEvent.favicon_url;
+    try {
+      const { data } = await supabase.from('events').select('favicon_url').eq('id', 1).single();
+      if (data && data.favicon_url) faviconUrl = data.favicon_url;
+    } catch (e) {}
+
+    const htmlPath = path.join(__dirname, 'public', 'index.html');
+    let html = fs.readFileSync(htmlPath, 'utf8');
+
+    if (faviconUrl) {
+      html = html.replace(/href="\/assets\/apple-touch-icon\.png"/g, `href="${faviconUrl}"`);
+      html = html.replace(/href="\/assets\/favicon\.png"/g, `href="${faviconUrl}"`);
+    }
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (err) {
+    next();
+  }
+});
+
+// Dynamic Web App Manifest for Android & Chrome Home Screen
+app.get('/manifest.json', async (req, res) => {
+  let faviconUrl = memoryEvent.favicon_url;
+  try {
+    const { data } = await supabase.from('events').select('favicon_url').eq('id', 1).single();
+    if (data && data.favicon_url) faviconUrl = data.favicon_url;
+  } catch (e) {}
+
+  const iconSrc = faviconUrl || '/assets/apple-touch-icon.png';
+  res.json({
+    name: 'Ticketmaster - My Tickets',
+    short_name: 'My Tickets',
+    description: 'Ticketmaster Mobile Tickets & Transfer',
+    start_url: '/',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#121212',
+    theme_color: '#121212',
+    icons: [
+      { src: iconSrc, sizes: '180x180', type: 'image/png', purpose: 'any' },
+      { src: iconSrc, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: iconSrc, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ----------------------------------------------------------------
