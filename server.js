@@ -113,6 +113,33 @@ let memoryTickets = [
 
 let memoryTransfers = [];
 
+// Helper to persist in-memory store to disk (survives local restarts)
+const STORE_PATH = path.join(__dirname, 'data_store.json');
+
+function saveStore() {
+  try {
+    fs.writeFileSync(STORE_PATH, JSON.stringify({
+      users: memoryUsers,
+      events: memoryEvents,
+      tickets: memoryTickets,
+      transfers: memoryTransfers
+    }, null, 2));
+  } catch (e) {}
+}
+
+function loadStore() {
+  try {
+    if (fs.existsSync(STORE_PATH)) {
+      const raw = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+      if (Array.isArray(raw.users) && raw.users.length) memoryUsers = raw.users;
+      if (Array.isArray(raw.events) && raw.events.length) memoryEvents = raw.events;
+      if (Array.isArray(raw.tickets) && raw.tickets.length) memoryTickets = raw.tickets;
+      if (Array.isArray(raw.transfers)) memoryTransfers = raw.transfers;
+    }
+  } catch (e) {}
+}
+loadStore();
+
 // Helper to authenticate request
 function getRequestUser(req) {
   const authHeader = req.headers['authorization'] || '';
@@ -175,6 +202,11 @@ app.get('/manifest.json', async (req, res) => {
       { src: iconSrc, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
     ]
   });
+});
+
+// Claim ticket routes (clean URLs + fallback)
+app.get(['/services/tickets/claim', '/claim', '/claim-ticket.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'claim-ticket.html'));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -568,8 +600,36 @@ app.post('/api/events/:id/transfer', async (req, res) => {
   // Compute absolute base URL & claim URL
   const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
   const host = req.headers['x-forwarded-host'] || req.get('host') || `localhost:${PORT}`;
-  const baseUrl = process.env.APP_BASE_URL || `${protocol}://${host}`;
-  const claimUrl = `${baseUrl}/claim-ticket.html?token=${token}`;
+  const envBase = (process.env.APP_BASE_URL || '').trim();
+  const baseUrl = (envBase && !envBase.includes('localhost')) ? envBase : `${protocol}://${host}`;
+
+  const senderName = user.display_name || user.email.split('@')[0] || 'A Friend';
+  const fallbackPayload = Buffer.from(JSON.stringify({
+    s: senderName,
+    rn: recipientName,
+    re: contact,
+    n: note || '',
+    eid: event.id,
+    en: event.artist_name,
+    et: event.tour_name,
+    ed: event.event_date,
+    vn: event.venue_name,
+    vc: event.venue_city,
+    img: event.artist_image,
+    sec: event.section,
+    row: event.row_name,
+    tids: ticketIds,
+    seats: transferredTickets.map(t => ({
+      id: t.id,
+      section: t.section,
+      row_name: t.row_name,
+      seat_label: t.seat_label,
+      seat_number: t.seat_number,
+      barcode_code: t.barcode_code
+    }))
+  })).toString('base64url');
+
+  const claimUrl = `${baseUrl}/services/tickets/claim?token=${token}&d=${fallbackPayload}`;
 
   const transferRecord = {
     id: Date.now(),
@@ -600,11 +660,13 @@ app.post('/api/events/:id/transfer', async (req, res) => {
     }
   });
 
+  saveStore();
+
   // Dispatch email if contact is an email address
   let emailResult = null;
   if (contact && contact.includes('@')) {
     emailResult = await mailer.sendTransferEmail({
-      senderName: user.display_name || user.email.split('@')[0] || 'A Friend',
+      senderName: senderName,
       recipientEmail: contact,
       recipientName: recipientName,
       event: event,
@@ -624,10 +686,60 @@ app.post('/api/events/:id/transfer', async (req, res) => {
   });
 });
 
+function decodeTransferFallback(token, dParam) {
+  if (!dParam) return null;
+  try {
+    const p = JSON.parse(Buffer.from(dParam, 'base64url').toString('utf8'));
+    return {
+      transfer: {
+        id: Date.now(),
+        token,
+        status: 'pending',
+        sender_name: p.s || 'A Friend',
+        recipient_name: p.rn || 'Ticket Recipient',
+        recipient_email: p.re || '',
+        note: p.n || '',
+        ticket_ids: p.tids || [],
+        event_id: p.eid || 1,
+        created_at: new Date().toISOString()
+      },
+      event: {
+        id: p.eid || 1,
+        artist_name: p.en || 'Live Event',
+        tour_name: p.et || '',
+        event_date: p.ed || 'Upcoming',
+        venue_name: p.vn || 'Stadium',
+        venue_city: p.vc || '',
+        artist_image: p.img || '/assets/u2_banner.jpg',
+        section: p.sec || 'GA',
+        row_name: p.row || 'GA',
+        ticket_count: (p.seats && p.seats.length) || 1
+      },
+      tickets: p.seats || [{ id: Date.now(), section: p.sec || 'GA', row_name: p.row || 'GA', seat_label: 'GA1', seat_number: 1 }]
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 // Transfer Claim Details Endpoint
 app.get('/api/transfers/:token/claim-details', (req, res) => {
   const token = req.params.token;
-  const transfer = memoryTransfers.find(t => t.token === token);
+  let transfer = memoryTransfers.find(t => t.token === token);
+
+  if (!transfer && req.query.d) {
+    const decoded = decodeTransferFallback(token, req.query.d);
+    if (decoded) {
+      return res.json({
+        success: true,
+        transfer: decoded.transfer,
+        event: decoded.event,
+        tickets: decoded.tickets,
+        isAccepted: false
+      });
+    }
+  }
+
   if (!transfer) {
     return res.status(404).json({ error: 'Transfer not found or expired.' });
   }
@@ -676,7 +788,17 @@ app.get('/api/transfers/:token/claim-details', (req, res) => {
 // Accept Transfer Endpoint
 app.post('/api/transfers/:token/accept', (req, res) => {
   const token = req.params.token;
-  const transfer = memoryTransfers.find(t => t.token === token);
+  let transfer = memoryTransfers.find(t => t.token === token);
+  const dParam = (req.body && req.body.d) || req.query.d;
+
+  if (!transfer && dParam) {
+    const decoded = decodeTransferFallback(token, dParam);
+    if (decoded) {
+      transfer = decoded.transfer;
+      memoryTransfers.unshift(transfer);
+    }
+  }
+
   if (!transfer) {
     return res.status(404).json({ error: 'Transfer link not found.' });
   }
@@ -764,8 +886,9 @@ app.post('/api/transfers/:token/accept', (req, res) => {
   }
 
   // Assign tickets to recipientUser
-  memoryTickets.forEach(t => {
-    if (transfer.ticket_ids.includes(t.id)) {
+  const existingTix = memoryTickets.filter(t => transfer.ticket_ids && transfer.ticket_ids.includes(t.id));
+  if (existingTix.length > 0) {
+    existingTix.forEach(t => {
       t.user_id = recipientUser.id;
       t.event_id = recipientEvent.id;
       t.status = 'active';
@@ -773,12 +896,29 @@ app.post('/api/transfers/:token/accept', (req, res) => {
       t.transferred_to_contact = null;
       t.transferred_at = null;
       t.transfer_token = null;
+    });
+  } else {
+    // Generate new active tickets for recipient
+    const count = (transfer.ticket_ids && transfer.ticket_ids.length) || 1;
+    for (let i = 1; i <= count; i++) {
+      memoryTickets.push({
+        id: Date.now() + i,
+        event_id: recipientEvent.id,
+        user_id: recipientUser.id,
+        seat_label: `${recipientEvent.section || 'GA'}${i}`,
+        seat_number: i,
+        section: recipientEvent.section || 'GA',
+        row_name: recipientEvent.row_name || 'GA',
+        status: 'active',
+        barcode_code: `819204810294${i}102`
+      });
     }
-  });
+  }
 
   transfer.status = 'accepted';
   transfer.accepted_by_user_id = recipientUser.id;
   transfer.accepted_at = new Date().toISOString();
+  saveStore();
 
   res.json({
     success: true,
