@@ -112,6 +112,7 @@ let memoryTickets = [
 ];
 
 let memoryTransfers = [];
+let siteFaviconUrl = '';
 
 // Helper to persist in-memory store to disk (survives local restarts)
 const STORE_PATH = path.join(__dirname, 'data_store.json');
@@ -122,7 +123,8 @@ function saveStore() {
       users: memoryUsers,
       events: memoryEvents,
       tickets: memoryTickets,
-      transfers: memoryTransfers
+      transfers: memoryTransfers,
+      siteFaviconUrl
     }, null, 2));
   } catch (e) {}
 }
@@ -135,6 +137,7 @@ function loadStore() {
       if (Array.isArray(raw.events) && raw.events.length) memoryEvents = raw.events;
       if (Array.isArray(raw.tickets) && raw.tickets.length) memoryTickets = raw.tickets;
       if (Array.isArray(raw.transfers)) memoryTransfers = raw.transfers;
+      if (typeof raw.siteFaviconUrl === 'string') siteFaviconUrl = raw.siteFaviconUrl;
     }
   } catch (e) {}
 }
@@ -332,7 +335,7 @@ app.get(['/', '/index.html'], async (req, res, next) => {
   try {
     const user = getRequestUser(req);
     const activeEvent = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
-    const faviconUrl = activeEvent?.favicon_url || '';
+    const faviconUrl = siteFaviconUrl || activeEvent?.favicon_url || '';
 
     const htmlPath = path.join(__dirname, 'public', 'index.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
@@ -353,7 +356,7 @@ app.get(['/', '/index.html'], async (req, res, next) => {
 app.get('/manifest.json', async (req, res) => {
   const user = getRequestUser(req);
   const activeEvent = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
-  const iconSrc = activeEvent?.favicon_url || '/assets/apple-touch-icon.png';
+  const iconSrc = siteFaviconUrl || activeEvent?.favicon_url || '/assets/apple-touch-icon.png';
   res.json({
     name: 'Ticketmaster - My Tickets',
     short_name: 'My Tickets',
@@ -1299,6 +1302,22 @@ app.post('/api/transfers/:token/accept', async (req, res) => {
     transferredCount: transfer.ticket_ids.length,
     message: 'Tickets accepted! They are now in your Ticketmaster account.'
   });
+});
+
+// Site Favicon APIs
+app.get('/api/favicon', (req, res) => {
+  const activeEvent = memoryEvents[0];
+  res.json({ success: true, faviconUrl: siteFaviconUrl || activeEvent?.favicon_url || '' });
+});
+
+app.post('/api/favicon', async (req, res) => {
+  const { faviconUrl } = req.body || {};
+  siteFaviconUrl = typeof faviconUrl === 'string' ? faviconUrl : '';
+  memoryEvents.forEach(ev => {
+    ev.favicon_url = siteFaviconUrl;
+  });
+  saveStore();
+  res.json({ success: true, faviconUrl: siteFaviconUrl });
 });
 
 // Gmail & Email Settings APIs

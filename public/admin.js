@@ -141,6 +141,13 @@ async function loadAdminData() {
     populateForm(currentEvent);
     renderTicketsTable(tickets);
     renderTransfersTable(transfers);
+    try {
+      const favRes = await fetch('/api/favicon');
+      const favData = await favRes.json();
+      if (favData && favData.faviconUrl) {
+        currentEvent = { ...(currentEvent || {}), favicon_url: favData.faviconUrl };
+      }
+    } catch (e) {}
     applyCurrentFavicon(currentEvent);
     loadGmailSettings();
     loadAdminUsers();
@@ -462,17 +469,54 @@ function previewFavicon(input) {
 
   const nameEl = document.getElementById('faviconFileName');
   const saveBtn = document.getElementById('saveFaviconBtn');
+  const previewImg = document.getElementById('faviconPreviewImg');
+  const emptyLabel = document.getElementById('faviconEmptyLabel');
   nameEl.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    pendingFaviconDataUrl = e.target.result;
-    const previewImg = document.getElementById('faviconPreviewImg');
-    const emptyLabel = document.getElementById('faviconEmptyLabel');
-    previewImg.src = pendingFaviconDataUrl;
-    previewImg.style.display = 'block';
-    if (emptyLabel) emptyLabel.style.display = 'none';
-    saveBtn.removeAttribute('disabled');
+    const rawDataUrl = e.target.result;
+    const isSvgOrIco = /\.(svg|ico)$/i.test(file.name) || /image\/(svg\+xml|x-icon|vnd\.microsoft\.icon)/i.test(file.type);
+
+    if (isSvgOrIco) {
+      pendingFaviconDataUrl = rawDataUrl;
+      previewImg.src = pendingFaviconDataUrl;
+      previewImg.style.display = 'block';
+      if (emptyLabel) emptyLabel.style.display = 'none';
+      saveBtn.removeAttribute('disabled');
+      return;
+    }
+
+    // Convert any raster format (jpg, webp, avif, gif, heic, png, etc.) to a clean 180x180 PNG
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const size = 180;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.min(size / img.width, size / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        pendingFaviconDataUrl = canvas.toDataURL('image/png');
+      } catch (err) {
+        pendingFaviconDataUrl = rawDataUrl;
+      }
+      previewImg.src = pendingFaviconDataUrl;
+      previewImg.style.display = 'block';
+      if (emptyLabel) emptyLabel.style.display = 'none';
+      saveBtn.removeAttribute('disabled');
+    };
+    img.onerror = () => {
+      pendingFaviconDataUrl = rawDataUrl;
+      previewImg.src = pendingFaviconDataUrl;
+      previewImg.style.display = 'block';
+      if (emptyLabel) emptyLabel.style.display = 'none';
+      saveBtn.removeAttribute('disabled');
+    };
+    img.src = rawDataUrl;
   };
   reader.readAsDataURL(file);
 }

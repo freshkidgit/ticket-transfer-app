@@ -579,7 +579,7 @@
     <div class="card" id="faviconCard">
       <h2 class="card-title">🖼️ Site Favicon Manager</h2>
       <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-        Upload any <code>.ico</code>, <code>.png</code>, or <code>.svg</code> file to change the tab icon on the website.
+        Upload any image (<code>.png</code>, <code>.jpg</code>, <code>.webp</code>, <code>.ico</code>, <code>.svg</code>, <code>.gif</code>, <code>.avif</code>, <code>.heic</code>) to change the tab &amp; home screen icon.
       </p>
 
       <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
@@ -597,7 +597,7 @@
         </div>
 
         <div style="flex:1;min-width:220px;">
-          <input type="file" id="faviconFileInput" accept="image/*" style="display:none;" onchange="previewFavicon(this)">
+          <input type="file" id="faviconFileInput" accept="image/*,.ico,.svg,.webp,.avif,.heic,.heif,.png,.jpg,.jpeg,.gif,.bmp" style="display:none;" onchange="previewFavicon(this)">
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button type="button" class="btn btn-secondary" onclick="document.getElementById('faviconFileInput').click();">
               📂 Choose Favicon File
