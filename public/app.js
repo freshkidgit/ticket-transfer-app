@@ -512,6 +512,7 @@ function renderEventDetailsModal() {
 
     const evmVenue = document.getElementById('evmVenueTitle');
     if (evmVenue) evmVenue.textContent = `${activeEvent.venue_name}, ${activeEvent.venue_city || ''}`;
+    updateEventGoogleMap(activeEvent);
   } else {
     if (amView) amView.style.display = 'block';
     if (euView) euView.style.display = 'none';
@@ -552,6 +553,7 @@ function renderEventDetailsModal() {
 
     const dmcVenue = document.getElementById('dmcVenueName');
     if (dmcVenue) dmcVenue.textContent = activeEvent.venue_name || 'San Siro Stadium';
+    updateEventGoogleMap(activeEvent);
 
     const ygtThumb = document.getElementById('ygtThumb');
     if (ygtThumb) ygtThumb.style.backgroundImage = `url('${activeEvent.artist_image || '/assets/u2_banner.jpg'}')`;
@@ -567,14 +569,37 @@ function renderEventDetailsModal() {
   }
 }
 
-function openDirections() {
-  if (activeEvent?.lat && activeEvent?.lng) {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeEvent.lat},${activeEvent.lng}`, '_blank');
-    return;
+let eventMapZoom = 15;
+
+function getEventMapQuery(ev) {
+  if (!ev) return 'San Siro Stadium, Milano';
+  const venuePart = [ev.venue_name, ev.venue_city].filter(Boolean).join(', ').trim();
+  if (venuePart) return venuePart;
+  if (ev.lat && ev.lng) return `${ev.lat},${ev.lng}`;
+  return 'San Siro Stadium, Milano';
+}
+
+function updateEventGoogleMap(ev) {
+  const query = encodeURIComponent(getEventMapQuery(ev));
+  const embedUrl = `https://maps.google.com/maps?q=${query}&z=${eventMapZoom}&output=embed`;
+  const dmcFrame = document.getElementById('dmcGoogleMapFrame');
+  if (dmcFrame && dmcFrame.getAttribute('src') !== embedUrl) {
+    dmcFrame.src = embedUrl;
   }
-  const venue = activeEvent?.venue_name || 'San Siro Stadium';
-  const city = activeEvent?.venue_city || 'Milano';
-  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue + ', ' + city)}`, '_blank');
+  const evmFrame = document.getElementById('evmGoogleMapFrame');
+  if (evmFrame && evmFrame.getAttribute('src') !== embedUrl) {
+    evmFrame.src = embedUrl;
+  }
+}
+
+function adjustEventMapZoom(delta) {
+  eventMapZoom = Math.min(18, Math.max(11, eventMapZoom + delta));
+  if (activeEvent) updateEventGoogleMap(activeEvent);
+}
+
+function openDirections() {
+  const query = getEventMapQuery(activeEvent);
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
 }
 
 function shareEvent() {

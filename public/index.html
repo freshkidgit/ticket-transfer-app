@@ -663,23 +663,18 @@
           <div class="edm-more-options-wrap">
             <h3 class="edm-more-heading">MORE OPTIONS</h3>
 
-            <!-- Detailed Venue Map Card with Pin, Gradient Title & Zoom -->
+            <!-- Detailed Venue Map Card with Live Google Map, Gradient Title & Zoom -->
             <div class="detailed-map-card">
-              <div class="dmc-map-area" id="dmcMapArea" style="background-image: url('/assets/venue_map_crop.png');">
-                <div class="dmc-header-gradient">
+              <div class="dmc-map-area" id="dmcMapArea" style="position:relative; overflow:hidden; background-image: url('/assets/venue_map_crop.png');">
+                <iframe id="dmcGoogleMapFrame" title="Venue Location Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" style="position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0;"></iframe>
+                <div class="dmc-header-gradient" style="position:relative; z-index:2; pointer-events:none;">
                   <span class="dmc-venue-name" id="dmcVenueName">San Siro Stadium</span>
                 </div>
-                <!-- Red Location Pin -->
-                <div class="dmc-pin-marker">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="#e11d48">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                </div>
                 <!-- Zoom Controls -->
-                <div class="dmc-zoom-controls">
-                  <button class="dmc-zoom-btn" onclick="alert('Zoom in')">+</button>
+                <div class="dmc-zoom-controls" style="z-index:2;">
+                  <button class="dmc-zoom-btn" onclick="adjustEventMapZoom(1)">+</button>
                   <div class="dmc-zoom-div"></div>
-                  <button class="dmc-zoom-btn" onclick="alert('Zoom out')">−</button>
+                  <button class="dmc-zoom-btn" onclick="adjustEventMapZoom(-1)">−</button>
                 </div>
               </div>
               <button class="dmc-directions-btn" onclick="openDirections()">Get Directions</button>
@@ -810,9 +805,10 @@
           </div>
 
           <!-- Venue Map Card -->
-          <div class="euro-venue-map-card">
-            <div class="evm-map-thumb" style="background-image: url('/assets/venue_map_crop.png');">
-              <div class="evm-label" id="evmVenueTitle">Plenitude Arena, Nanterre</div>
+          <div class="euro-venue-map-card" onclick="openDirections()" style="cursor:pointer;">
+            <div class="evm-map-thumb" style="position:relative; overflow:hidden; background-image: url('/assets/venue_map_crop.png');">
+              <iframe id="evmGoogleMapFrame" title="Venue Location Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" style="position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0; pointer-events:none;"></iframe>
+              <div class="evm-label" id="evmVenueTitle" style="position:relative; z-index:2;">Plenitude Arena, Nanterre</div>
             </div>
           </div>
         </div>
@@ -1176,14 +1172,14 @@
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label">Lat</label>
-            <input type="text" id="ceLat" class="form-input" placeholder="40.7505" value="40.7505">
+            <input type="text" id="ceLat" class="form-input" placeholder="Auto from venue">
           </div>
           <div class="form-group">
             <label class="form-label">Lng</label>
-            <input type="text" id="ceLng" class="form-input" placeholder="-73.9934" value="-73.9934">
+            <input type="text" id="ceLng" class="form-input" placeholder="Auto from venue">
           </div>
         </div>
-        <div class="form-helper" style="margin-top:-8px; margin-bottom:14px;">Map defaults to NYC if coordinates are blank. Map updates automatically.</div>
+        <div class="form-helper" style="margin-top:-8px; margin-bottom:14px;">Leave blank to show Google Maps directly from your Venue &amp; location above.</div>
 
         <!-- Seat map image URL (optional) -->
         <div class="form-group">

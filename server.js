@@ -331,18 +331,45 @@ function getRequestUser(req) {
 // ----------------------------------------------------------------
 // Dynamic Server-Side Injection for iOS Home Screen & Favicon
 // ----------------------------------------------------------------
+function getActiveFaviconHref() {
+  const activeEvent = memoryEvents[0];
+  const raw = siteFaviconUrl || activeEvent?.favicon_url || '';
+  if (!raw) return '';
+  if (raw.startsWith('data:')) {
+    const hash = crypto.createHash('md5').update(raw).digest('hex').slice(0, 8);
+    return `/site-favicon?v=${hash}`;
+  }
+  return raw;
+}
+
+// Serve exact uploaded favicon bytes over HTTP (required for iOS Add to Home Screen)
+app.get('/site-favicon', (req, res) => {
+  const raw = siteFaviconUrl || memoryEvents[0]?.favicon_url || '';
+  if (!raw) {
+    return res.sendFile(path.join(__dirname, 'public', 'assets', 'apple-touch-icon.png'));
+  }
+  const match = raw.match(/^data:([^;]+);base64,(.+)$/);
+  if (match) {
+    const mimeType = match[1];
+    const buf = Buffer.from(match[2], 'base64');
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return res.send(buf);
+  }
+  return res.redirect(raw);
+});
+
 app.get(['/', '/index.html'], async (req, res, next) => {
   try {
-    const user = getRequestUser(req);
-    const activeEvent = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
-    const faviconUrl = siteFaviconUrl || activeEvent?.favicon_url || '';
+    const faviconHref = getActiveFaviconHref();
 
     const htmlPath = path.join(__dirname, 'public', 'index.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
 
-    if (faviconUrl) {
-      html = html.replace(/href="\/assets\/apple-touch-icon\.png"/g, `href="${faviconUrl}"`);
-      html = html.replace(/href="\/assets\/favicon\.png"/g, `href="${faviconUrl}"`);
+    if (faviconHref) {
+      html = html.replace(/href="\/assets\/apple-touch-icon\.png"/g, `href="${faviconHref}"`);
+      html = html.replace(/href="\/assets\/favicon\.png"/g, `href="${faviconHref}"`);
+      html = html.replace(/href="\/assets\/favicon\.ico"/g, `href="${faviconHref}"`);
     }
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -354,9 +381,7 @@ app.get(['/', '/index.html'], async (req, res, next) => {
 
 // Dynamic Web App Manifest
 app.get('/manifest.json', async (req, res) => {
-  const user = getRequestUser(req);
-  const activeEvent = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
-  const iconSrc = siteFaviconUrl || activeEvent?.favicon_url || '/assets/apple-touch-icon.png';
+  const iconSrc = getActiveFaviconHref() || '/assets/apple-touch-icon.png';
   res.json({
     name: 'Ticketmaster - My Tickets',
     short_name: 'My Tickets',
@@ -883,7 +908,7 @@ app.put('/api/events/:id', async (req, res) => {
   const fields = [
     'artist_name', 'tour_name', 'event_type', 'badge_text', 'section', 'row_name',
     'venue_name', 'venue_city', 'event_date', 'purchase_date', 'entrance_details',
-    'ticket_price', 'artist_image', 'favicon_url'
+    'ticket_price', 'artist_image', 'favicon_url', 'lat', 'lng', 'map_image'
   ];
 
   fields.forEach(f => {
