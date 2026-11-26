@@ -429,39 +429,76 @@ function closeEventDetails() {
 function renderEventDetailsModal() {
   if (!activeEvent) return;
 
-  const banner = document.getElementById('edmBanner');
-  if (banner) banner.style.backgroundImage = `url('${activeEvent.artist_image || '/assets/u2_banner.jpg'}')`;
+  const s = currentUser.settings || {};
+  const isEuropean = s.appLayout === 'european';
 
-  document.getElementById('edmDateBadge').textContent = activeEvent.event_date;
-  document.getElementById('edmTitle').textContent = activeEvent.artist_name;
-  document.getElementById('edmVenue').textContent = `${activeEvent.venue_name} - ${activeEvent.venue_city || ''}`;
-  document.getElementById('edmTicketCount').innerHTML = `🎟️ x${activeTickets.length}`;
+  const amView = document.getElementById('americanEventView');
+  const euView = document.getElementById('europeanEventView');
 
-  document.getElementById('edmOrderNum').textContent = `Order #${activeEvent.order_number || '5-85630/UT5'}`;
-  document.getElementById('edmOrderTix').textContent = `x${activeTickets.length} Tickets`;
+  if (isEuropean) {
+    if (amView) amView.style.display = 'none';
+    if (euView) euView.style.display = 'block';
 
-  const seatsContainer = document.getElementById('edmSeatsList');
-  if (seatsContainer) {
-    const s = currentUser.settings || {};
-    seatsContainer.innerHTML = activeTickets.map((t, idx) => `
-      <div class="seat-card-item" onclick="openTicketInfoSheet(${t.id})">
-        <div class="sci-top">${activeEvent.badge_text || 'Artist Presale'}</div>
-        <div class="sci-row">
-          <div>
-            <div class="sci-section-label">SECTION</div>
-            <div class="sci-sec-val">${t.section || 'GA'}</div>
+    const etcBadge = document.getElementById('etcBadgeText');
+    if (etcBadge) etcBadge.textContent = activeEvent.badge_text || 'STAY Membership Presale';
+
+    const etcSec = document.getElementById('etcSecVal');
+    if (etcSec) etcSec.textContent = activeTickets[0]?.section || activeEvent.section || 'VIP1';
+
+    const etcRow = document.getElementById('etcRowVal');
+    if (etcRow) etcRow.textContent = activeEvent.row_name || 'VIP';
+
+    const etcSeat = document.getElementById('etcSeatVal');
+    if (etcSeat) etcSeat.textContent = activeTickets[0]?.seat_number || activeTickets[0]?.seat_label || '1';
+
+    const etcBanner = document.getElementById('etcBannerWrap');
+    if (etcBanner) etcBanner.style.backgroundImage = `url('${activeEvent.artist_image || '/assets/straykids_banner.jpg'}')`;
+
+    const etcTitle = document.getElementById('etcTitle');
+    if (etcTitle) etcTitle.textContent = activeEvent.artist_name;
+
+    const etcMeta = document.getElementById('etcMeta');
+    if (etcMeta) etcMeta.textContent = `${activeEvent.event_date} • ${activeEvent.venue_name}, ${activeEvent.venue_city || ''}`;
+
+    const evmVenue = document.getElementById('evmVenueTitle');
+    if (evmVenue) evmVenue.textContent = `${activeEvent.venue_name}, ${activeEvent.venue_city || ''}`;
+  } else {
+    if (amView) amView.style.display = 'block';
+    if (euView) euView.style.display = 'none';
+
+    const banner = document.getElementById('edmBanner');
+    if (banner) banner.style.backgroundImage = `url('${activeEvent.artist_image || '/assets/u2_banner.jpg'}')`;
+
+    document.getElementById('edmDateBadge').textContent = activeEvent.event_date;
+    document.getElementById('edmTitle').textContent = activeEvent.artist_name;
+    document.getElementById('edmVenue').textContent = `${activeEvent.venue_name} - ${activeEvent.venue_city || ''}`;
+    document.getElementById('edmTicketCount').innerHTML = `🎟️ x${activeTickets.length}`;
+
+    document.getElementById('edmOrderNum').textContent = `Order #${activeEvent.order_number || '5-85630/UT5'}`;
+    document.getElementById('edmOrderTix').textContent = `x${activeTickets.length} Tickets`;
+
+    const seatsContainer = document.getElementById('edmSeatsList');
+    if (seatsContainer) {
+      seatsContainer.innerHTML = activeTickets.map((t, idx) => `
+        <div class="seat-card-item" onclick="openTicketInfoSheet(${t.id})">
+          <div class="sci-top">${activeEvent.badge_text || 'Artist Presale'}</div>
+          <div class="sci-row">
+            <div>
+              <div class="sci-section-label">SECTION</div>
+              <div class="sci-sec-val">${t.section || 'GA'}</div>
+            </div>
+            <div>
+              <div class="sci-sec-val">${t.seat_label || 'GA' + (idx + 1)}</div>
+            </div>
           </div>
-          <div>
-            <div class="sci-sec-val">${t.seat_label || 'GA' + (idx + 1)}</div>
-          </div>
+          ${s.showTransferAccepted ? `
+            <div class="sci-transfer-accepted-badge">
+              ✓ Transfer Accepted by ${s.acceptedByName || 'Mary Flores'}
+            </div>
+          ` : ''}
         </div>
-        ${s.showTransferAccepted ? `
-          <div class="sci-transfer-accepted-badge">
-            ✓ Transfer Accepted by ${s.acceptedByName || 'Mary Flores'}
-          </div>
-        ` : ''}
-      </div>
-    `).join('');
+      `).join('');
+    }
   }
 }
 
@@ -1272,3 +1309,107 @@ function handlePermToggle(key, val) {
   const flagEl = document.getElementById('countryFlagEmoji');
   if (flagEl) flagEl.textContent = c.flag;
 })();
+
+
+// ----------------------------------------------------------------
+// App Layout Switching (American vs European)
+// ----------------------------------------------------------------
+function setAppLayout(layout) {
+  if (!currentUser.settings) currentUser.settings = {};
+  currentUser.settings.appLayout = layout;
+  saveSettingsSilently();
+  updateLayoutUI();
+  if (activeEvent) renderEventDetailsModal();
+}
+
+function updateLayoutUI() {
+  const layout = currentUser.settings?.appLayout || 'american';
+  const cardAm = document.getElementById('cardLayoutAmerican');
+  const cardEu = document.getElementById('cardLayoutEuropean');
+  const rowCd = document.getElementById('rowLayout2Countdown');
+
+  if (cardAm && cardEu) {
+    cardAm.classList.toggle('active', layout === 'american');
+    cardEu.classList.toggle('active', layout === 'european');
+  }
+  if (rowCd) {
+    rowCd.style.display = layout === 'european' ? 'flex' : 'none';
+  }
+}
+
+function setAppLanguage(lang) {
+  if (!currentUser.settings) currentUser.settings = {};
+  currentUser.settings.language = lang;
+  saveSettingsSilently();
+  ['en', 'es', 'fr'].forEach(l => {
+    const btn = document.getElementById(`btnLang${l.charAt(0).toUpperCase() + l.slice(1)}`);
+    if (btn) btn.classList.toggle('active', l === lang);
+  });
+}
+
+function setPaymentMethod(method) {
+  if (!currentUser.settings) currentUser.settings = {};
+  currentUser.settings.paymentMethod = method;
+  saveSettingsSilently();
+
+  const btnNgn = document.getElementById('btnPayNgn');
+  const btnUsd = document.getElementById('btnPayUsd');
+  const btnPay = document.getElementById('payFlutterwaveBtn');
+
+  if (btnNgn) btnNgn.classList.toggle('active', method === 'ngn');
+  if (btnUsd) btnUsd.classList.toggle('active', method === 'usd');
+
+  if (btnPay) {
+    const price = (currentPassQuantity * 3000).toLocaleString();
+    if (method === 'usd') {
+      const usdPrice = (currentPassQuantity * 2).toFixed(2);
+      btnPay.textContent = `Pay $${usdPrice} with Crypto`;
+    } else {
+      btnPay.textContent = `Pay ₦${price} with Flutterwave`;
+    }
+  }
+}
+
+function toggleCountdownTicketDropdown() {
+  alert('Select ticket for countdown: Ticket #1 (VIP1) selected.');
+}
+
+// ----------------------------------------------------------------
+// European Transfer Flow (Matching frame f_150.png)
+// ----------------------------------------------------------------
+function startEuropeanTransferFlow() {
+  const modal = document.getElementById('euroTransferModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeEuroTransfer() {
+  const modal = document.getElementById('euroTransferModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function openEuroManualTransfer() {
+  closeEuroTransfer();
+  startTransferFlow();
+}
+
+function selectFromContactsSimulated() {
+  const name = prompt('Select or enter contact name:', 'Mary Flores');
+  if (name && name.trim()) {
+    const contact = prompt('Enter contact email or phone number:', 'mary.flores@example.com');
+    if (contact && contact.trim()) {
+      closeEuroTransfer();
+      completeTransferProcess(name.split(' ')[0], name.split(' ')[1] || '', contact.trim(), 'Transferred via contacts');
+    }
+  }
+}
+
+// Ensure settings subview initializes layout & language states
+const origRenderWatchlistProfile = renderWatchlistProfile;
+renderWatchlistProfile = function() {
+  origRenderWatchlistProfile();
+  updateLayoutUI();
+  const lang = currentUser.settings?.language || 'en';
+  setAppLanguage(lang);
+  const pm = currentUser.settings?.paymentMethod || 'ngn';
+  setPaymentMethod(pm);
+};

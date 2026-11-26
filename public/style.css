@@ -2492,3 +2492,536 @@ input:checked + .slider:before {
    ================================================================ */
 #viewTickets { position: relative; }
 .my-events-header { position: relative; }
+
+
+/* ================================================================
+   HIGH-QUALITY CIRCULAR COUNTRY FLAG (HEADER)
+   ================================================================ */
+.country-flag-btn {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: #1c1c1e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.country-flag-btn:active {
+  transform: scale(0.92);
+  border-color: #026cdf;
+}
+.flag-circle {
+  font-size: 19px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ================================================================
+   SETTINGS: LANGUAGE, APP LAYOUT & PAYMENT METHOD STYLES
+   ================================================================ */
+.settings-card-group {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  margin-bottom: 14px;
+}
+.lang-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.lang-btn {
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.lang-btn.active {
+  border-color: #026cdf;
+  background: #f0f6ff;
+}
+.lang-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+.lang-code {
+  font-size: 11.5px;
+  color: #6b7280;
+  font-weight: 600;
+}
+.lang-btn.active .lang-name { color: #026cdf; }
+.lang-btn.active .lang-code { color: #026cdf; }
+
+/* App Layout Options (American vs European) */
+.layout-subhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+.layout-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.layout-card-option {
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.layout-card-option.active {
+  border-color: #026cdf;
+  background: #f0f6ff;
+}
+.lco-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+.lco-sub {
+  font-size: 12.5px;
+  color: #6b7280;
+  margin-top: 3px;
+}
+.layout-card-option.active .lco-title { color: #026cdf; }
+.layout-card-option.active .lco-sub { color: #026cdf; font-weight: 600; }
+
+/* Payment Method Tabs */
+.payment-method-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+.pm-tab {
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pm-tab.active {
+  border-color: #026cdf;
+  background: #f0f6ff;
+}
+.pm-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+}
+.pm-sub {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+.pm-tab.active .pm-title { color: #026cdf; }
+.pm-tab.active .pm-sub { color: #026cdf; }
+
+.wallet-remaining-box {
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.wrb-count {
+  font-size: 18px;
+  font-weight: 800;
+  color: #026cdf;
+}
+
+/* ================================================================
+   LAYOUT 2: EUROPEAN VERSION TICKET VIEW (Frame f_140.png)
+   ================================================================ */
+.event-layout-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.euro-tabs-bar {
+  display: flex;
+  border-bottom: 1.5px solid #23262d;
+  background: #000000;
+  padding: 0 16px;
+  margin-top: 50px;
+}
+.euro-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #8e8e93;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 12px 0 10px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+}
+.euro-tab.active {
+  color: #ffffff;
+}
+.euro-tab.active:after {
+  content: '';
+  position: absolute;
+  bottom: -1.5px;
+  left: 20%;
+  right: 20%;
+  height: 2.5px;
+  background: #026cdf;
+  border-radius: 2px;
+}
+
+.euro-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 80px;
+  background: #0b0c0e;
+}
+
+/* European Ticket Card */
+.euro-ticket-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+  background: #ffffff;
+  margin-bottom: 12px;
+}
+
+/* Blue Header */
+.etc-header {
+  background: #026cdf;
+  padding: 14px 18px 16px;
+  color: #ffffff;
+}
+.etc-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.etc-badge {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+.etc-info-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stats 3 columns */
+.etc-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  text-align: center;
+}
+.etc-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.etc-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.etc-val {
+  font-size: 21px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+/* Banner Wrap */
+.etc-banner-wrap {
+  position: relative;
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+.etc-gradient-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.85) 100%);
+}
+.etc-event-details {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+}
+.etc-title {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ffffff;
+  margin: 0 0 4px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+}
+.etc-meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+
+/* Bottom white card */
+.etc-footer {
+  background: #ffffff;
+  padding: 16px 16px 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.etc-mobile-tag {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.etc-view-barcode-btn {
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 260px;
+  padding: 13px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  transition: transform 0.15s;
+}
+.etc-view-barcode-btn:active {
+  transform: scale(0.98);
+}
+.etc-details-link {
+  background: none;
+  border: none;
+  color: #026cdf;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Dots Row */
+.euro-dots-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 0 16px;
+}
+.euro-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4b5563;
+}
+.euro-dot.active {
+  background: #ffffff;
+}
+
+/* 3 Action Buttons */
+.euro-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.euro-btn {
+  border-radius: 8px;
+  padding: 14px 10px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.15s;
+}
+.euro-btn.blue {
+  background: #026cdf;
+  color: #ffffff;
+}
+.euro-btn.blue:active {
+  transform: scale(0.97);
+}
+.euro-btn.disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: default;
+}
+
+/* Venue Map Card */
+.euro-venue-map-card {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1c1e22;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.evm-map-thumb {
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding: 14px 16px;
+}
+.evm-label {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+}
+
+/* ================================================================
+   EUROPEAN TRANSFER SHEET (Frame f_150.png)
+   ================================================================ */
+.euro-transfer-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 3500;
+}
+.euro-transfer-modal.open {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.etm-backdrop {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+.etm-sheet {
+  position: relative;
+  background: #ffffff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 24px 20px 28px;
+  color: #111827;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+  animation: slideUpSheet 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.etm-title {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin: 0 0 20px;
+  color: #111827;
+}
+.etm-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.etm-action-btn {
+  background: #ffffff;
+  border: 1.5px solid #026cdf;
+  border-radius: 8px;
+  padding: 15px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: #026cdf;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.etm-action-btn:active {
+  background: #f0f6ff;
+}
+.etm-desc-box {
+  text-align: center;
+  padding: 12px 10px 24px;
+}
+.etm-plane-icon {
+  margin: 0 auto 10px;
+  display: block;
+}
+.etm-desc-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+.etm-desc-sub {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+  max-width: 280px;
+  margin: 0 auto;
+}
+.etm-footer {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 14px;
+}
+.etm-back-btn {
+  background: none;
+  border: none;
+  color: #026cdf;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 4px;
+}

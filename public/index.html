@@ -338,7 +338,12 @@
       <!-- Header -->
       <div class="my-events-header">
         <div class="meh-left"></div>
-        <h1 class="meh-title">My Events <button class="country-flag-btn" id="countryFlagBtn" onclick="toggleCountryPicker(event)"><span id="countryFlagEmoji">🇺🇸</span></button></h1>
+        <h1 class="meh-title">
+          My Events
+          <button class="country-flag-btn" id="countryFlagBtn" onclick="toggleCountryPicker(event)" title="Change country">
+            <span class="flag-circle" id="countryFlagEmoji">🇺🇸</span>
+          </button>
+        </h1>
         <div class="meh-right">
           <button class="help-link-btn" onclick="alert('Ticketmaster Support: Contact your event organizer or visit Help Center.')">Help</button>
         </div>
@@ -556,6 +561,7 @@
 
     <!-- ========================================================
          VIEW 5: EVENT DETAILS & TICKETS VIEW (SINGLE EVENT)
+         Supports Layout 1 (American) and Layout 2 (European)
          ======================================================== -->
     <div class="event-details-modal" id="eventDetailsModal">
       <!-- Top Navigation -->
@@ -568,69 +574,183 @@
         </button>
       </div>
 
-      <!-- Event Poster Banner -->
-      <div class="edm-banner" id="edmBanner" style="background-image: url('/assets/u2_banner.jpg');"></div>
+      <!-- LAYOUT 1: AMERICAN VIEW -->
+      <div id="americanEventView" class="event-layout-container">
+        <!-- Event Poster Banner -->
+        <div class="edm-banner" id="edmBanner" style="background-image: url('/assets/u2_banner.jpg');"></div>
 
-      <!-- Event Info Container -->
-      <div class="edm-info-card">
-        <div class="edm-date-badge" id="edmDateBadge">MON, JUL 05, 2027 • 7:30 PM</div>
-        <div class="edm-title-wrap">
-          <h1 class="edm-title" id="edmTitle">U2: THE GREATEST SHOW ON EARTH WORLD TOUR</h1>
-        </div>
-        <div class="edm-venue-row">
-          <span class="edm-venue" id="edmVenue">San Siro Stadium - Milano</span>
-          <span class="edm-ticket-count" id="edmTicketCount"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v12H4z"/></svg> x4</span>
-        </div>
-
-        <button class="edm-view-tickets-btn" onclick="handleViewTicketsClick()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="4" y1="6" x2="4" y2="18"></line><line x1="8" y1="6" x2="8" y2="18"></line><line x1="12" y1="6" x2="12" y2="18"></line><line x1="17" y1="6" x2="17" y2="18"></line><line x1="20" y1="6" x2="20" y2="18"></line></svg>
-          View Tickets
-        </button>
-      </div>
-
-      <!-- Segmented Tabs: Tickets & Extras -->
-      <div class="edm-subtabs">
-        <button class="edm-tab active" id="edmTabTickets" onclick="switchEdmTab('tickets')">Tickets</button>
-        <button class="edm-tab" id="edmTabExtras" onclick="switchEdmTab('extras')">Extras</button>
-      </div>
-
-      <!-- Tickets Tab Content -->
-      <div class="edm-content" id="edmContentTickets">
-        <div class="edm-order-row">
-          <div class="edm-order-info">
-            <span class="edm-order-num" id="edmOrderNum">Order #5-85630/UT5</span>
-            <span class="edm-order-tix" id="edmOrderTix">x4 Tickets</span>
+        <!-- Event Info Container -->
+        <div class="edm-info-card">
+          <div class="edm-date-badge" id="edmDateBadge">MON, JUL 05, 2027 • 7:30 PM</div>
+          <div class="edm-title-wrap">
+            <h1 class="edm-title" id="edmTitle">U2: THE GREATEST SHOW ON EARTH WORLD TOUR</h1>
           </div>
-          <button class="dots-btn" onclick="alert('Order options')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+          <div class="edm-venue-row">
+            <span class="edm-venue" id="edmVenue">San Siro Stadium - Milano</span>
+            <span class="edm-ticket-count" id="edmTicketCount"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v12H4z"/></svg> x4</span>
+          </div>
+
+          <button class="edm-view-tickets-btn" onclick="handleViewTicketsClick()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="4" y1="6" x2="4" y2="18"></line><line x1="8" y1="6" x2="8" y2="18"></line><line x1="12" y1="6" x2="12" y2="18"></line><line x1="17" y1="6" x2="17" y2="18"></line><line x1="20" y1="6" x2="20" y2="18"></line></svg>
+            View Tickets
+          </button>
         </div>
 
-        <!-- Ticket Seats List -->
-        <div class="edm-seats-list" id="edmSeatsList">
-          <!-- Dynamically populated seat cards -->
+        <!-- Segmented Tabs: Tickets & Extras -->
+        <div class="edm-subtabs">
+          <button class="edm-tab active" id="edmTabTickets" onclick="switchEdmTab('tickets')">Tickets</button>
+          <button class="edm-tab" id="edmTabExtras" onclick="switchEdmTab('extras')">Extras</button>
         </div>
-      </div>
 
-      <!-- Extras Tab Content -->
-      <div class="edm-content" id="edmContentExtras" style="display:none;">
-        <div class="no-extras-state">No extras for this event</div>
-      </div>
+        <!-- Tickets Tab Content -->
+        <div class="edm-content" id="edmContentTickets">
+          <div class="edm-order-row">
+            <div class="edm-order-info">
+              <span class="edm-order-num" id="edmOrderNum">Order #5-85630/UT5</span>
+              <span class="edm-order-tix" id="edmOrderTix">x4 Tickets</span>
+            </div>
+            <button class="dots-btn" onclick="alert('Order options')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+          </div>
 
-      <!-- Floating Action Pill (Upgrade, Transfer, Sell) -->
-      <div class="floating-ticket-pill">
-        <button class="ftp-action" onclick="alert('Upgrades not currently available for this event.')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-          <span>Upgrade</span>
-        </button>
-        <div class="ftp-divider"></div>
-        <button class="ftp-action blue" onclick="startTransferFlow()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
-          <span style="color:#026cdf; font-weight:700;">Transfer</span>
-        </button>
-        <div class="ftp-divider"></div>
-        <button class="ftp-action" onclick="alert('Resale is currently restricted by the event organizer.')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-          <span>Sell</span>
-        </button>
+          <!-- Ticket Seats List -->
+          <div class="edm-seats-list" id="edmSeatsList">
+            <!-- Dynamically populated seat cards -->
+          </div>
+        </div>
+
+        <!-- Extras Tab Content -->
+        <div class="edm-content" id="edmContentExtras" style="display:none;">
+          <div class="no-extras-state">No extras for this event</div>
+        </div>
+
+        <!-- Floating Action Pill (Upgrade, Transfer, Sell) -->
+        <div class="floating-ticket-pill">
+          <button class="ftp-action" onclick="alert('Upgrades not currently available for this event.')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+            <span>Upgrade</span>
+          </button>
+          <div class="ftp-divider"></div>
+          <button class="ftp-action blue" onclick="startTransferFlow()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+            <span style="color:#026cdf; font-weight:700;">Transfer</span>
+          </button>
+          <div class="ftp-divider"></div>
+          <button class="ftp-action" onclick="alert('Resale is currently restricted by the event organizer.')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span>Sell</span>
+          </button>
+        </div>
+      </div><!-- /americanEventView -->
+
+      <!-- LAYOUT 2: EUROPEAN VIEW (Matching video frame f_140.png) -->
+      <div id="europeanEventView" class="event-layout-container" style="display:none;">
+        <!-- Top Subtabs: MY TICKETS & ADD-ONS (0) -->
+        <div class="euro-tabs-bar">
+          <button class="euro-tab active">MY TICKETS</button>
+          <button class="euro-tab">ADD-ONS (0)</button>
+        </div>
+
+        <div class="euro-scroll-area">
+          <!-- European Ticket Card -->
+          <div class="euro-ticket-card">
+            <!-- Blue Top Header -->
+            <div class="etc-header">
+              <div class="etc-badge-row">
+                <span class="etc-badge" id="etcBadgeText">STAY Membership Presale</span>
+                <button class="etc-info-btn" onclick="openTicketInfoSheet(101)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </button>
+              </div>
+
+              <div class="etc-stats-grid">
+                <div class="etc-col">
+                  <div class="etc-label">SEC</div>
+                  <div class="etc-val" id="etcSecVal">VIP1</div>
+                </div>
+                <div class="etc-col">
+                  <div class="etc-label">ROW</div>
+                  <div class="etc-val" id="etcRowVal">VIP</div>
+                </div>
+                <div class="etc-col">
+                  <div class="etc-label">SEAT</div>
+                  <div class="etc-val" id="etcSeatVal">1</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle Poster Banner -->
+            <div class="etc-banner-wrap" id="etcBannerWrap" style="background-image: url('/assets/straykids_banner.jpg');">
+              <div class="etc-gradient-overlay"></div>
+              <div class="etc-event-details">
+                <h2 class="etc-title" id="etcTitle">STRAY KIDS WORLD TOUR [RUN IT PARIS] -</h2>
+                <div class="etc-meta" id="etcMeta">FRI, JUL 09, 2027 • 7:30 PM • Plenitude Arena, Nanterre</div>
+              </div>
+            </div>
+
+            <!-- Bottom White Card -->
+            <div class="etc-footer">
+              <div class="etc-mobile-tag">Mobile</div>
+              <button class="etc-view-barcode-btn" onclick="handleViewTicketsClick()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="4" y1="6" x2="4" y2="18"></line><line x1="8" y1="6" x2="8" y2="18"></line><line x1="12" y1="6" x2="12" y2="18"></line><line x1="17" y1="6" x2="17" y2="18"></line><line x1="20" y1="6" x2="20" y2="18"></line></svg>
+                <span>View Ticket</span>
+              </button>
+              <button class="etc-details-link" onclick="openTicketInfoSheet(101)">Ticket Details</button>
+            </div>
+          </div>
+
+          <!-- Carousel Dots -->
+          <div class="euro-dots-row">
+            <span class="euro-dot active"></span>
+            <span class="euro-dot"></span>
+          </div>
+
+          <!-- 3 European Action Buttons -->
+          <div class="euro-actions-row">
+            <button class="euro-btn blue" onclick="startEuropeanTransferFlow()">Transfer</button>
+            <button class="euro-btn disabled" onclick="alert('Resale is currently restricted.')">Sell</button>
+            <button class="euro-btn blue" onclick="alert('Viewing order history.')">Orders</button>
+          </div>
+
+          <!-- Venue Map Card -->
+          <div class="euro-venue-map-card">
+            <div class="evm-map-thumb" style="background-image: url('/assets/venue_map_crop.png');">
+              <div class="evm-label" id="evmVenueTitle">Plenitude Arena, Nanterre</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /europeanEventView -->
+
+    </div><!-- /eventDetailsModal -->
+
+    <!-- ========================================================
+         EUROPEAN TRANSFER SHEET (Matching video frame f_150.png)
+         ======================================================== -->
+    <div class="euro-transfer-modal" id="euroTransferModal">
+      <div class="etm-backdrop" onclick="closeEuroTransfer()"></div>
+      <div class="etm-sheet">
+        <h3 class="etm-title">TRANSFER TO</h3>
+
+        <div class="etm-buttons-group">
+          <button class="etm-action-btn" onclick="selectFromContactsSimulated()">
+            <span>Select From Contacts</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><circle cx="13" cy="8" r="2.5"></circle><path d="M16 14a3 3 0 0 0-6 0"></path></svg>
+          </button>
+
+          <button class="etm-action-btn" onclick="openEuroManualTransfer()">
+            <span>Manually Enter A Recipient</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          </button>
+        </div>
+
+        <div class="etm-desc-box">
+          <svg class="etm-plane-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.8"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          <div class="etm-desc-title">Transfer Tickets Via Email or Text Message</div>
+          <div class="etm-desc-sub">Select an email or mobile number to transfer ticket to your recipient</div>
+        </div>
+
+        <div class="etm-footer">
+          <button class="etm-back-btn" onclick="closeEuroTransfer()">&lt; BACK</button>
+        </div>
       </div>
     </div>
 
@@ -1014,14 +1134,69 @@
         <div style="width:50px;"></div>
       </div>
       <div class="msv-body">
-        <!-- Wallet pass purchase section -->
-        <div class="settings-pass-card">
-          <div class="spc-top">
-            <span class="spc-title">Wallet passes remaining</span>
-            <span class="spc-count" id="settingsPassesCount">0</span>
+
+        <!-- Language Section -->
+        <div class="settings-card-group">
+          <label class="form-label" style="font-size:15px; font-weight:700;">Language</label>
+          <div class="form-helper" style="margin-bottom:10px;">Choose the language for app screens and curated event names. User-created events stay as entered unless translations are added.</div>
+          <div class="lang-selector-grid">
+            <button class="lang-btn active" id="btnLangEn" onclick="setAppLanguage('en')">
+              <span class="lang-name">English</span>
+              <span class="lang-code">EN</span>
+            </button>
+            <button class="lang-btn" id="btnLangEs" onclick="setAppLanguage('es')">
+              <span class="lang-name">Spanish</span>
+              <span class="lang-code">ES</span>
+            </button>
+            <button class="lang-btn" id="btnLangFr" onclick="setAppLanguage('fr')">
+              <span class="lang-name">French</span>
+              <span class="lang-code">FR</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- App Layout Section (Layout 1 American vs Layout 2 European) -->
+        <div class="settings-card-group" style="margin-top:16px;">
+          <label class="form-label" style="font-size:15px; font-weight:700;">App layout</label>
+          <div class="layout-subhead">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>Ticket experience style</span>
+          </div>
+          <div class="layout-selector-grid">
+            <div class="layout-card-option" id="cardLayoutAmerican" onclick="setAppLayout('american')">
+              <div class="lco-title">Layout 1</div>
+              <div class="lco-sub">American</div>
+            </div>
+            <div class="layout-card-option" id="cardLayoutEuropean" onclick="setAppLayout('european')">
+              <div class="lco-title">Layout 2</div>
+              <div class="lco-sub">European</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Apple Wallet Purchase Section -->
+        <div class="settings-card-group" style="margin-top:16px;">
+          <label class="form-label" style="font-size:15px; font-weight:700;">Apple Wallet</label>
+          <div class="form-helper" style="margin-bottom:12px;">Buy Apple Wallet pass credits so recipients can add transferred tickets to Wallet on the acceptance website. Each pass costs $2 (₦3,000).</div>
+
+          <div class="sub-label" style="margin-top:8px;">Payment method</div>
+          <div class="payment-method-row">
+            <button class="pm-tab active" id="btnPayNgn" onclick="setPaymentMethod('ngn')">
+              <span class="pm-title">Pay in NGN</span>
+              <span class="pm-sub">Card / Bank • Flutterwave</span>
+            </button>
+            <button class="pm-tab" id="btnPayUsd" onclick="setPaymentMethod('usd')">
+              <span class="pm-title">Pay in USD</span>
+              <span class="pm-sub">Crypto</span>
+            </button>
           </div>
 
-          <div class="spc-stepper-row">
+          <div class="wallet-remaining-box">
+            <span>Wallet passes remaining</span>
+            <span class="wrb-count" id="settingsPassesCount">0</span>
+          </div>
+
+          <div class="spc-stepper-row" style="margin-top:14px;">
             <span class="spc-label">Quantity</span>
             <div class="stepper-box">
               <button class="step-btn" onclick="adjustPassQuantity(-1)">−</button>
@@ -1031,12 +1206,12 @@
             <span class="spc-price" id="passPriceDisplay">₦6,000</span>
           </div>
 
-          <button class="primary-blue-btn" id="payFlutterwaveBtn" onclick="buyPassCredits()">Pay ₦6,000 with Flutterwave</button>
+          <button class="primary-blue-btn" id="payFlutterwaveBtn" style="width:100%; margin-top:12px;" onclick="buyPassCredits()">Pay ₦6,000 with Flutterwave</button>
           <div class="form-helper" style="text-align:center; margin-top:8px;">Minimum 2 passes (₦6,000)</div>
         </div>
 
-        <!-- Toggles Section -->
-        <div class="settings-toggles-card">
+        <!-- Wallet Toggles -->
+        <div class="settings-toggles-card" style="margin-top:16px;">
           <div class="toggle-row">
             <div class="tr-label-wrap">
               <span class="tr-title">Enable Apple Wallet for ticket transfers</span>
@@ -1086,6 +1261,40 @@
               <input type="checkbox" id="toggleBlankPage" onchange="handleSettingToggle('showBlankPage', this.checked)">
               <span class="slider"></span>
             </label>
+          </div>
+
+          <!-- Layout 2 specific setting: Ticket ready countdown -->
+          <div class="toggle-row" id="rowLayout2Countdown" style="margin-top:14px;">
+            <div class="tr-label-wrap">
+              <span class="tr-title">Layout 2: show ticket ready countdown</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="toggleLayout2Countdown" onchange="handleSettingToggle('showLayout2Countdown', this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="layout2CountdownFields" style="display:none; margin-top:10px;">
+            <label class="form-label">Ticket for countdown</label>
+            <div class="event-picker-box" onclick="toggleCountdownTicketDropdown()">
+              <div class="ep-text">
+                <span class="ep-title" id="selectedCdTicketTitle">Choose a ticket</span>
+                <span class="ep-sub">Tap to browse tickets</span>
+              </div>
+              <span class="ep-select-btn">SELECT</span>
+            </div>
+
+            <div class="form-row-2" style="margin-top:10px;">
+              <div class="form-group">
+                <label class="form-label">Ready date</label>
+                <input type="date" id="cdReadyDate" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time</label>
+                <input type="time" id="cdReadyTime" class="form-input" value="19:30">
+              </div>
+            </div>
+            <div class="form-helper">Choose one ticket — only that card shows the countdown until the ready time. Only one ticket status line can be active at a time. Both are off by default.</div>
           </div>
         </div>
 
