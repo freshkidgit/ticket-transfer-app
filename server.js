@@ -264,6 +264,10 @@ async function syncFromSupabase() {
     const { data: users, error: uErr } = await supabase.from('app_users').select('*');
     if (!uErr && Array.isArray(users) && users.length > 0) {
       users.forEach(u => {
+        if (u.id === '__site_config__' && u.settings && typeof u.settings.siteFaviconUrl === 'string') {
+          siteFaviconUrl = u.settings.siteFaviconUrl;
+          return;
+        }
         // Skip the legacy demo user
         if (u.id === DEFAULT_USER_ID || (u.email && u.email.toLowerCase().includes('toom4117'))) return;
         // Add to memory if not already there
@@ -343,10 +347,10 @@ function getActiveFaviconHref() {
 }
 
 // Serve exact uploaded favicon bytes over HTTP (required for iOS Add to Home Screen)
-app.get('/site-favicon', (req, res) => {
+function sendSiteFavicon(req, res, fallbackFile) {
   const raw = siteFaviconUrl || memoryEvents[0]?.favicon_url || '';
   if (!raw) {
-    return res.sendFile(path.join(__dirname, 'public', 'assets', 'apple-touch-icon.png'));
+    return res.sendFile(path.join(__dirname, 'public', 'assets', fallbackFile || 'apple-touch-icon.png'));
   }
   const match = raw.match(/^data:([^;]+);base64,(.+)$/);
   if (match) {
@@ -357,6 +361,19 @@ app.get('/site-favicon', (req, res) => {
     return res.send(buf);
   }
   return res.redirect(raw);
+}
+
+app.get([
+  '/site-favicon',
+  '/apple-touch-icon.png',
+  '/apple-touch-icon-precomposed.png',
+  '/favicon.ico',
+  '/assets/apple-touch-icon.png',
+  '/assets/favicon.png',
+  '/assets/favicon.ico'
+], (req, res) => {
+  const fallback = req.path.endsWith('.ico') ? 'favicon.ico' : (req.path.endsWith('favicon.png') ? 'favicon.png' : 'apple-touch-icon.png');
+  return sendSiteFavicon(req, res, fallback);
 });
 
 app.get(['/', '/index.html'], async (req, res, next) => {
@@ -370,9 +387,13 @@ app.get(['/', '/index.html'], async (req, res, next) => {
       html = html.replace(/href="\/assets\/apple-touch-icon\.png"/g, `href="${faviconHref}"`);
       html = html.replace(/href="\/assets\/favicon\.png"/g, `href="${faviconHref}"`);
       html = html.replace(/href="\/assets\/favicon\.ico"/g, `href="${faviconHref}"`);
+      // Remove hardcoded type/sizes so iOS/browsers accept any uploaded format (jpg, webp, png, svg, ico)
+      html = html.replace(/type="image\/png"\s+sizes="64x64"\s+/g, '');
+      html = html.replace(/type="image\/x-icon"\s+/g, '');
     }
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     return res.send(html);
   } catch (err) {
     next();
@@ -677,7 +698,7 @@ app.get('/api/admin/users', async (req, res) => {
     const { data: sbUsers } = await supabase.from('app_users').select('id, email, display_name, city, country, created_at, settings');
     if (Array.isArray(sbUsers)) {
       sbUsers.forEach(u => {
-        if (u.id === DEFAULT_USER_ID || (u.email && u.email.toLowerCase().includes('toom4117'))) return;
+        if (u.id === DEFAULT_USER_ID || u.id === '__site_config__' || (u.email && u.email.toLowerCase().includes('toom4117'))) return;
         if (!memoryUsers.find(mu => mu.id === u.id)) {
           memoryUsers.push(u);
           hydrateUserFromSupabase(u);
@@ -687,7 +708,7 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (e) {}
 
   const list = memoryUsers
-    .filter(u => u.id !== DEFAULT_USER_ID && !(u.email && u.email.toLowerCase().includes('toom4117')))
+    .filter(u => u.id !== DEFAULT_USER_ID && u.id !== '__site_config__' && !(u.email && u.email.toLowerCase().includes('toom4117')))
     .map(u => ({
       id: u.id,
       email: u.email,
@@ -1342,6 +1363,17 @@ app.post('/api/favicon', async (req, res) => {
     ev.favicon_url = siteFaviconUrl;
   });
   saveStore();
+  // Persist globally in Supabase app_users so it survives server restarts
+  try {
+    await supabase.from('app_users').upsert({
+      id: '__site_config__',
+      email: '__site_config__@internal.local',
+      password: '',
+      display_name: 'Site Config',
+      settings: { siteFaviconUrl },
+      updated_at: new Date().toISOString()
+    });
+  } catch (e) {}
   res.json({ success: true, faviconUrl: siteFaviconUrl });
 });
 
