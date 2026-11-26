@@ -54,18 +54,18 @@
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
-          <span class="city-name" id="cityDisplayHeader">Los Angeles</span>
+          <span class="city-name" id="cityDisplayHeader">Zagreb</span>
           <svg class="chevron-right" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
 
         <!-- Search Bar Pill -->
         <div class="search-pill">
-          <div class="search-icon-circle">
+          <div class="search-icon-circle blue-fill">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </div>
           <div class="search-input-wrap">
             <span class="search-placeholder-prefix">Search For </span>
-            <input type="text" id="homeSearchInput" class="search-input" placeholder="Artists, Venues, or Events" oninput="handleHomeSearch(this.value)">
+            <input type="text" id="homeSearchInput" class="search-input" placeholder="Events" oninput="handleHomeSearch(this.value)">
           </div>
         </div>
       </div>
@@ -78,52 +78,68 @@
         </div>
 
         <div class="for-you-carousel" id="forYouCarousel">
-          <!-- Main Hero Banner Card -->
+          <!-- Card 1: Lakers -->
+          <div class="for-you-card" onclick="openEventById(1)">
+            <div class="fyc-banner" style="background-image: url('/assets/lakers_banner.jpg');">
+              <div class="fyc-overlay"></div>
+              <div class="fyc-badge">LOS ANGELES LAKERS</div>
+            </div>
+            <div class="fyc-info">
+              <div class="fyc-meta-row-new">
+                <div class="fyc-date-col-box">
+                  <span class="fyc-month-label">DEC</span>
+                  <span class="fyc-day-large">15</span>
+                  <div class="fyc-short-line"></div>
+                </div>
+                <div class="fyc-details-col-box">
+                  <span class="fyc-sub-time">Tuesday • 4:00 AM</span>
+                  <span class="fyc-venue-line"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg> Crypto.com Arena - Los Angele...</span>
+                </div>
+                <button class="fyc-dots-btn" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Dodgers -->
+          <div class="for-you-card" onclick="openEventById(1)">
+            <div class="fyc-banner" style="background-image: url('/assets/dodgers_banner.jpg');">
+              <div class="fyc-overlay"></div>
+              <div class="fyc-badge">LOS ANGELES DODGERS</div>
+            </div>
+            <div class="fyc-info">
+              <div class="fyc-meta-row-new">
+                <div class="fyc-date-col-box">
+                  <span class="fyc-month-label">&nbsp;</span>
+                  <span class="fyc-day-large">20</span>
+                  <div class="fyc-short-line"></div>
+                </div>
+                <div class="fyc-details-col-box">
+                  <span class="fyc-sub-time">20 —</span>
+                  <span class="fyc-venue-line"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg> UNIQLO Field at Dodger Stadiu...</span>
+                </div>
+                <button class="fyc-dots-btn" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Kings -->
           <div class="for-you-card" onclick="openEventById(1)">
             <div class="fyc-banner" style="background-image: url('/assets/kings_banner.jpg');">
               <div class="fyc-overlay"></div>
               <div class="fyc-badge">LOS ANGELES KINGS</div>
             </div>
             <div class="fyc-info">
-              <div class="fyc-title-row">
-                <span class="fyc-title">LOS ANGELES KINGS</span>
-                <button class="dots-menu-btn" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
-              </div>
-              <div class="fyc-meta-row">
-                <div class="fyc-date-col">
-                  <span class="fyc-month">NOV</span>
-                  <span class="fyc-day">29</span>
-                  <div class="fyc-day-line"></div>
+              <div class="fyc-meta-row-new">
+                <div class="fyc-date-col-box">
+                  <span class="fyc-month-label">NOV</span>
+                  <span class="fyc-day-large">29</span>
+                  <div class="fyc-short-line"></div>
                 </div>
-                <div class="fyc-details-col">
-                  <span class="fyc-sub">Sunday • 3:00 AM</span>
-                  <span class="fyc-venue"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg> Crypto.com Arena - Los Angeles...</span>
+                <div class="fyc-details-col-box">
+                  <span class="fyc-sub-time">Sunday • 3:00 AM</span>
+                  <span class="fyc-venue-line"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg> Crypto.com Arena - Los Angeles...</span>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Secondary Hero Banner Card -->
-          <div class="for-you-card" onclick="openEventById(1)">
-            <div class="fyc-banner" style="background-image: url('/assets/u2_banner.jpg');">
-              <div class="fyc-overlay"></div>
-              <div class="fyc-badge">U2 WORLD TOUR</div>
-            </div>
-            <div class="fyc-info">
-              <div class="fyc-title-row">
-                <span class="fyc-title">U2: THE GREATEST SHOW ON EARTH</span>
-                <button class="dots-menu-btn" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
-              </div>
-              <div class="fyc-meta-row">
-                <div class="fyc-date-col">
-                  <span class="fyc-month">JUL</span>
-                  <span class="fyc-day">05</span>
-                  <div class="fyc-day-line"></div>
-                </div>
-                <div class="fyc-details-col">
-                  <span class="fyc-sub">Mon • 7:30 PM</span>
-                  <span class="fyc-venue"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg> San Siro Stadium - Milano</span>
-                </div>
+                <button class="fyc-dots-btn" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
               </div>
             </div>
           </div>
@@ -131,40 +147,40 @@
 
         <!-- Trending Section -->
         <div class="section-title-wrap between">
-          <h2 class="section-title" id="trendingTitle">Trending In Los Angeles</h2>
+          <h2 class="section-title" id="trendingTitle">Trending In Zagreb</h2>
           <button class="view-all-link">View All</button>
         </div>
 
         <div class="trending-list" id="trendingList">
-          <!-- 01 Kings -->
+          <!-- 01 Lakers -->
           <div class="trending-item">
-            <span class="rank-num">01</span>
-            <div class="trending-thumb" style="background-image: url('/assets/kings_banner.jpg');"></div>
+            <span class="rank-num outline-gold">01</span>
+            <div class="trending-thumb" style="background-image: url('/assets/lakers_banner.jpg');"></div>
             <div class="trending-info">
-              <span class="trending-name">LOS ANGELES KINGS</span>
-              <span class="trending-category">🎤 NHL</span>
-            </div>
-            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
-          </div>
-          <!-- 02 Lakers -->
-          <div class="trending-item">
-            <span class="rank-num">02</span>
-            <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
-            <div class="trending-info">
-              <span class="trending-name">LOS ANGELES LAKERS</span>
+              <span class="trending-name">LOS ANGELES...</span>
               <span class="trending-category">🏆 NBA</span>
             </div>
-            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+          </div>
+          <!-- 02 Kings -->
+          <div class="trending-item">
+            <span class="rank-num outline-gold">02</span>
+            <div class="trending-thumb" style="background-image: url('/assets/kings_banner.jpg');"></div>
+            <div class="trending-info">
+              <span class="trending-name">LOS ANGELES...</span>
+              <span class="trending-category">🏒 NHL</span>
+            </div>
+            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
           </div>
           <!-- 03 Dodgers -->
           <div class="trending-item">
-            <span class="rank-num">03</span>
+            <span class="rank-num outline-gold">03</span>
             <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
             <div class="trending-info">
-              <span class="trending-name">LOS ANGELES DODGERS</span>
+              <span class="trending-name">LOS ANGELES...</span>
               <span class="trending-category">⚾ MLB</span>
             </div>
-            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
           </div>
         </div>
 
@@ -176,22 +192,56 @@
 
         <div class="recent-events-scroll" id="recentEventsScroll">
           <div class="recent-event-card" onclick="openEventById(1)">
-            <div class="rec-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
-            <div class="rec-info">
-              <span class="rec-date">20 20 —</span>
-              <span class="rec-name">LOS ANGELES DODGERS</span>
-              <span class="rec-venue">TBA • UNIQIO Field at Dodger St...</span>
-            </div>
-          </div>
-          <div class="recent-event-card" onclick="openEventById(1)">
-            <div class="rec-thumb" style="background-image: url('/assets/u2_banner.jpg');"></div>
+            <div class="rec-thumb" style="background-image: url('/assets/lakers_banner.jpg');"></div>
             <div class="rec-info">
               <span class="rec-date">Tue 15 Dec</span>
               <span class="rec-name">LOS ANGELES LAKERS</span>
-              <span class="rec-venue">4:00 AM • Crypto.com Arena</span>
+              <span class="rec-venue">4:00 AM • Crypto.com Arena - Lo...</span>
+            </div>
+          </div>
+          <div class="recent-event-card" onclick="openEventById(1)">
+            <div class="rec-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
+            <div class="rec-info">
+              <span class="rec-date">20 20 —</span>
+              <span class="rec-name">LOS ANGELES DODGE...</span>
+              <span class="rec-venue">TBA • UNIQLO Field at Dodger...</span>
             </div>
           </div>
         </div>
+
+        <!-- Last Minute Section (From Screenshot 3) -->
+        <div class="section-title-wrap between">
+          <h2 class="section-title">Last Minute</h2>
+          <button class="view-all-link">View All</button>
+        </div>
+        <div class="recent-events-scroll">
+          <div class="recent-event-card" onclick="openEventById(1)">
+            <div class="rec-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
+            <div class="rec-info">
+              <span class="rec-date">20 20 —</span>
+              <span class="rec-name">LOS ANGELES DODGE...</span>
+              <span class="rec-venue">TBA • UNIQLO Field at Dodger St...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Popular This Weekend Section -->
+        <div class="section-title-wrap between">
+          <h2 class="section-title">Popular This Weekend</h2>
+          <button class="view-all-link">View All</button>
+        </div>
+        <div class="recent-events-scroll">
+          <div class="recent-event-card" onclick="openEventById(1)">
+            <div class="rec-thumb" style="background-image: url('/assets/kings_banner.jpg');"></div>
+            <div class="rec-info">
+              <span class="rec-date">Sun 29 Nov</span>
+              <span class="rec-name">LOS ANGELES KINGS</span>
+              <span class="rec-venue">3:00 AM • Crypto.com Arena</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
       </div>
 
       <!-- Floating Bottom Pill: Find Events Near You -->
@@ -382,7 +432,7 @@
             <h2 class="hec-event-title" id="hecEventTitle">U2: THE GREATEST SHOW ON EARTH WORLD TOUR</h2>
             <div class="hec-divider"></div>
             <div class="hec-venue" id="hecVenue">San Siro Stadium - Milano</div>
-            <button class="hec-view-btn" onclick="event.stopPropagation(); handleViewTicketsClick();">View Tickets</button>
+            <button class="hec-view-btn" onclick="event.stopPropagation(); openHeroEvent();">View Tickets</button>
           </div>
         </div>
 
@@ -615,6 +665,62 @@
           <!-- Ticket Seats List -->
           <div class="edm-seats-list" id="edmSeatsList">
             <!-- Dynamically populated seat cards -->
+          </div>
+
+          <!-- MORE OPTIONS SECTION (From Screenshot 6) -->
+          <div class="edm-more-options-wrap">
+            <h3 class="edm-more-heading">MORE OPTIONS</h3>
+
+            <!-- Detailed Venue Map Card with Pin, Gradient Title & Zoom -->
+            <div class="detailed-map-card">
+              <div class="dmc-map-area" id="dmcMapArea" style="background-image: url('/assets/venue_map_crop.png');">
+                <div class="dmc-header-gradient">
+                  <span class="dmc-venue-name" id="dmcVenueName">San Siro Stadium</span>
+                </div>
+                <!-- Red Location Pin -->
+                <div class="dmc-pin-marker">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="#e11d48">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+                <!-- Zoom Controls -->
+                <div class="dmc-zoom-controls">
+                  <button class="dmc-zoom-btn" onclick="alert('Zoom in')">+</button>
+                  <div class="dmc-zoom-div"></div>
+                  <button class="dmc-zoom-btn" onclick="alert('Zoom out')">−</button>
+                </div>
+              </div>
+              <button class="dmc-directions-btn" onclick="openDirections()">Get Directions</button>
+            </div>
+
+            <!-- "YOU GOT TICKETS!" Card -->
+            <div class="you-got-tickets-card">
+              <div class="ygt-left">
+                <div class="ygt-thumb" id="ygtThumb" style="background-image: url('/assets/u2_banner.jpg');"></div>
+                <div class="ygt-info">
+                  <span class="ygt-date" id="ygtDate">MON, JUL 05, 2027 • 7:30 PM</span>
+                  <span class="ygt-title" id="ygtTitle">U2: THE GREATEST SHOW ON EARTH WORLD TOUR</span>
+                  <span class="ygt-venue" id="ygtVenue">San Siro Stadium - Milano</span>
+                </div>
+              </div>
+              <div class="ygt-right">
+                <div class="ygt-badge-text">YOU GOT TICKETS!</div>
+                <div class="ygt-line"></div>
+              </div>
+            </div>
+
+            <!-- Post on Social Media Card -->
+            <div class="social-share-card">
+              <h4 class="ssc-title">Post on Social Media</h4>
+              <p class="ssc-desc">Build hype for the event, and share that you got tickets with your friends and family.</p>
+              <button class="ssc-share-btn" onclick="shareEvent()">
+                <span>Share You're Going</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </button>
+            </div>
+
+            <!-- Bottom spacing so content clears floating pill -->
+            <div style="height: 70px;"></div>
           </div>
         </div>
 

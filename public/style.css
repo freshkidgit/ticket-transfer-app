@@ -3025,3 +3025,286 @@ input:checked + .slider:before {
   cursor: pointer;
   padding: 6px 4px;
 }
+
+
+/* ================================================================
+   HOME VIEW ENHANCEMENTS (Matching Screenshots 1, 2, 3)
+   ================================================================ */
+.search-icon-circle.blue-fill {
+  background: #026cdf;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+.fyc-meta-row-new {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px 14px;
+  gap: 12px;
+}
+.fyc-date-col-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 38px;
+}
+.fyc-month-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+}
+.fyc-day-large {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  margin: 2px 0 4px;
+}
+.fyc-short-line {
+  width: 22px;
+  height: 2px;
+  background: #4b5563;
+  border-radius: 1px;
+}
+.fyc-details-col-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fyc-sub-time {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+.fyc-venue-line {
+  font-size: 12px;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.fyc-dots-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 6px;
+}
+
+/* Gold Outline Rank Numbers for Trending List */
+.rank-num.outline-gold {
+  font-size: 26px;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #d4af37;
+  letter-spacing: -0.5px;
+  margin-right: 14px;
+  width: 34px;
+  flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ================================================================
+   MORE OPTIONS & DETAILED MAP (Screenshots 5 & 6)
+   ================================================================ */
+.edm-more-options-wrap {
+  padding: 22px 16px 30px;
+}
+.edm-more-heading {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.6px;
+  margin: 0 0 14px;
+}
+.detailed-map-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1c1e22;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+}
+.dmc-map-area {
+  height: 190px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dmc-header-gradient {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%);
+  padding: 12px 16px;
+}
+.dmc-venue-name {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+.dmc-pin-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+.dmc-zoom-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dmc-zoom-btn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 30px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dmc-zoom-div {
+  height: 1px;
+  background: #e5e7eb;
+}
+.dmc-directions-btn {
+  width: 100%;
+  background: #1c1e22;
+  border: none;
+  border-top: 1px solid #282a30;
+  color: #ffffff;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+.dmc-directions-btn:active {
+  background: #282b33;
+}
+
+/* "YOU GOT TICKETS!" Card */
+.you-got-tickets-card {
+  background: #141518;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+.ygt-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.ygt-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+.ygt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ygt-date {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #9ca3af;
+}
+.ygt-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+}
+.ygt-venue {
+  font-size: 11px;
+  color: #9ca3af;
+}
+.ygt-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-left: 12px;
+}
+.ygt-badge-text {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffffff;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+.ygt-line {
+  width: 36px;
+  height: 2px;
+  background: #ffffff;
+  margin-top: 4px;
+}
+
+/* Post on Social Media Card */
+.social-share-card {
+  background: #141518;
+  border-radius: 12px;
+  padding: 18px 16px;
+  margin-bottom: 20px;
+}
+.ssc-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+.ssc-desc {
+  font-size: 13px;
+  color: #9ca3af;
+  line-height: 1.45;
+  margin: 0 0 14px;
+}
+.ssc-share-btn {
+  width: 100%;
+  background: #23252a;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  padding: 13px 16px;
+  font-size: 14.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ssc-share-btn:active {
+  background: #2c2f36;
+}

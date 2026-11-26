@@ -4,17 +4,21 @@
 let currentUser = {
   id: 'user-toom-001',
   email: 'toom41170@gmail.com',
-  display_name: 'Toom',
-  city: 'Los Angeles',
-  country: 'United States',
+  display_name: 'Serena',
+  city: 'Zagreb',
+  country: 'Croatia',
   days_left: 22,
   wallet_passes: 0,
   settings: {
+    appLayout: 'american',
+    language: 'en',
+    paymentMethod: 'ngn',
     enableAppleWallet: false,
     useGoogleWallet: false,
     showTransferAccepted: false,
     acceptedByName: 'Mary Flores',
     showBlankPage: false,
+    showLayout2Countdown: false,
     enableTransferFee: false,
     transferFeeAmount: '$50.47'
   }
@@ -136,7 +140,7 @@ function renderAllViews() {
 }
 
 function renderHome() {
-  const city = currentUser.city || 'Los Angeles';
+  const city = currentUser.city || 'Zagreb';
   const cityEl = document.getElementById('cityDisplayHeader');
   if (cityEl) cityEl.textContent = city;
 
@@ -330,6 +334,13 @@ function switchMainTab(viewId) {
   };
   const activeBtn = document.getElementById(btnMap[viewId]);
   if (activeBtn) activeBtn.classList.add('active');
+
+  if (viewId === 'viewWatchlist') {
+    const hasCustomAccount = localStorage.getItem('tm_has_account');
+    if (!hasCustomAccount) {
+      openAuthModal('register');
+    }
+  }
 }
 
 function switchManageSubtab(tab) {
@@ -499,6 +510,39 @@ function renderEventDetailsModal() {
         </div>
       `).join('');
     }
+
+    const dmcVenue = document.getElementById('dmcVenueName');
+    if (dmcVenue) dmcVenue.textContent = activeEvent.venue_name || 'San Siro Stadium';
+
+    const ygtThumb = document.getElementById('ygtThumb');
+    if (ygtThumb) ygtThumb.style.backgroundImage = `url('${activeEvent.artist_image || '/assets/u2_banner.jpg'}')`;
+
+    const ygtDate = document.getElementById('ygtDate');
+    if (ygtDate) ygtDate.textContent = activeEvent.event_date;
+
+    const ygtTitle = document.getElementById('ygtTitle');
+    if (ygtTitle) ygtTitle.textContent = activeEvent.artist_name;
+
+    const ygtVenue = document.getElementById('ygtVenue');
+    if (ygtVenue) ygtVenue.textContent = `${activeEvent.venue_name} - ${activeEvent.venue_city || ''}`;
+  }
+}
+
+function openDirections() {
+  const venue = activeEvent?.venue_name || 'San Siro Stadium';
+  const city = activeEvent?.venue_city || 'Milano';
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue + ', ' + city)}`, '_blank');
+}
+
+function shareEvent() {
+  if (navigator.share) {
+    navigator.share({
+      title: activeEvent?.artist_name || 'My Tickets',
+      text: `I got tickets to ${activeEvent?.artist_name || 'the event'}!`,
+      url: window.location.href
+    }).catch(() => {});
+  } else {
+    alert("✓ Link copied! Share you're going with friends and family.");
   }
 }
 
