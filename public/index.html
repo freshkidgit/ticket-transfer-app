@@ -12,302 +12,1078 @@
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
   <link rel="manifest" href="/manifest.json" id="app-manifest">
   
-  <!-- iOS Home Screen Web App Meta -->
+  <!-- iOS Web App Meta -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="My Tickets">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ticketmaster">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#121212">
+  <meta name="theme-color" content="#000000">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Clean Mobile App Container -->
-  <div class="mobile-app-root">
+  <!-- Simulated iOS Top Push Notification (2FA SMS Banner) -->
+  <div class="ios-notification" id="iosNotification" onclick="handleNotificationClick()">
+    <div class="ios-noti-icon">
+      <div class="tm-mini-logo">t</div>
+    </div>
+    <div class="ios-noti-content">
+      <div class="ios-noti-header">
+        <span class="ios-noti-title">Ticketmaster</span>
+        <span class="ios-noti-time">now</span>
+      </div>
+      <div class="ios-noti-body" id="iosNotiBody">Your verification code is 663100. Don't share this code with anyone.</div>
+    </div>
+  </div>
 
-    <!-- Ticketmaster Mobile Top Header -->
-    <header class="tm-header">
-      <button class="nav-btn close-btn" id="closeNavBtn" aria-label="Close">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-      
-      <!-- Secret Admin Trigger: Triple Click Header Title -->
-      <h1 class="header-title" id="secretAdminTrigger" title="My Tickets">My Tickets</h1>
-      
-      <button class="nav-btn help-btn" id="helpNavBtn">Help</button>
-    </header>
+  <!-- Main Mobile App Shell -->
+  <div class="app-shell" id="appShell">
 
-    <!-- Navigation Tabs -->
-    <div class="tm-tabs">
-      <button class="tab-item active" id="tabMyTickets">
-        <span>MY TICKETS</span>
-        <div class="tab-indicator"></div>
-      </button>
-      <button class="tab-item" id="tabAddOns">
-        <span>ADD-ONS</span>
-      </button>
+    <!-- ========================================================
+         VIEW 1: HOME TAB
+         ======================================================== -->
+    <section class="tab-view active" id="viewHome">
+      <!-- Home Header -->
+      <div class="home-header">
+        <button class="city-selector-btn" id="citySelectorBtn" onclick="openCityPicker()">
+          <svg class="cyan-pin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span class="city-name" id="cityDisplayHeader">Los Angeles</span>
+          <svg class="chevron-right" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+
+        <!-- Search Bar Pill -->
+        <div class="search-pill">
+          <div class="search-icon-circle">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          <div class="search-input-wrap">
+            <span class="search-placeholder-prefix">Search For </span>
+            <input type="text" id="homeSearchInput" class="search-input" placeholder="Artists, Venues, or Events" oninput="handleHomeSearch(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Home Scrollable Content -->
+      <div class="home-content">
+        <!-- For You Section -->
+        <div class="section-title-wrap">
+          <h2 class="section-title">For You</h2>
+        </div>
+
+        <div class="for-you-carousel" id="forYouCarousel">
+          <!-- Main Hero Banner Card -->
+          <div class="for-you-card" onclick="openEventById(1)">
+            <div class="fyc-banner" style="background-image: url('/assets/kings_banner.png');">
+              <div class="fyc-overlay"></div>
+              <div class="fyc-badge">LOS ANGELES KINGS</div>
+            </div>
+            <div class="fyc-info">
+              <div class="fyc-title-row">
+                <span class="fyc-title">LOS ANGELES KINGS</span>
+                <button class="dots-menu-btn" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+              </div>
+              <div class="fyc-meta-row">
+                <div class="fyc-date-col">
+                  <span class="fyc-month">NOV</span>
+                  <span class="fyc-day">29</span>
+                  <div class="fyc-day-line"></div>
+                </div>
+                <div class="fyc-details-col">
+                  <span class="fyc-sub">Sunday • 3:00 AM</span>
+                  <span class="fyc-venue"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg> Crypto.com Arena - Los Angeles...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secondary Hero Banner Card -->
+          <div class="for-you-card" onclick="openEventById(1)">
+            <div class="fyc-banner" style="background-image: url('/assets/u2_banner.png');">
+              <div class="fyc-overlay"></div>
+              <div class="fyc-badge">U2 WORLD TOUR</div>
+            </div>
+            <div class="fyc-info">
+              <div class="fyc-title-row">
+                <span class="fyc-title">U2: THE GREATEST SHOW ON EARTH</span>
+                <button class="dots-menu-btn" onclick="event.stopPropagation();"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+              </div>
+              <div class="fyc-meta-row">
+                <div class="fyc-date-col">
+                  <span class="fyc-month">JUL</span>
+                  <span class="fyc-day">05</span>
+                  <div class="fyc-day-line"></div>
+                </div>
+                <div class="fyc-details-col">
+                  <span class="fyc-sub">Mon • 7:30 PM</span>
+                  <span class="fyc-venue"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg> San Siro Stadium - Milano</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trending Section -->
+        <div class="section-title-wrap between">
+          <h2 class="section-title" id="trendingTitle">Trending In Los Angeles</h2>
+          <button class="view-all-link">View All</button>
+        </div>
+
+        <div class="trending-list" id="trendingList">
+          <!-- 01 Kings -->
+          <div class="trending-item">
+            <span class="rank-num">01</span>
+            <div class="trending-thumb" style="background-image: url('/assets/kings_banner.png');"></div>
+            <div class="trending-info">
+              <span class="trending-name">LOS ANGELES KINGS</span>
+              <span class="trending-category">🎤 NHL</span>
+            </div>
+            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+          </div>
+          <!-- 02 Lakers -->
+          <div class="trending-item">
+            <span class="rank-num">02</span>
+            <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.png');"></div>
+            <div class="trending-info">
+              <span class="trending-name">LOS ANGELES LAKERS</span>
+              <span class="trending-category">🏆 NBA</span>
+            </div>
+            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+          </div>
+          <!-- 03 Dodgers -->
+          <div class="trending-item">
+            <span class="rank-num">03</span>
+            <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.png');"></div>
+            <div class="trending-info">
+              <span class="trending-name">LOS ANGELES DODGERS</span>
+              <span class="trending-category">⚾ MLB</span>
+            </div>
+            <button class="heart-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></button>
+          </div>
+        </div>
+
+        <!-- Recently Browsed Events -->
+        <div class="section-title-wrap between">
+          <h2 class="section-title">Recently Browsed Events</h2>
+          <button class="view-all-link">View All</button>
+        </div>
+
+        <div class="recent-events-scroll" id="recentEventsScroll">
+          <div class="recent-event-card" onclick="openEventById(1)">
+            <div class="rec-thumb" style="background-image: url('/assets/dodgers_banner.png');"></div>
+            <div class="rec-info">
+              <span class="rec-date">20 20 —</span>
+              <span class="rec-name">LOS ANGELES DODGERS</span>
+              <span class="rec-venue">TBA • UNIQIO Field at Dodger St...</span>
+            </div>
+          </div>
+          <div class="recent-event-card" onclick="openEventById(1)">
+            <div class="rec-thumb" style="background-image: url('/assets/u2_banner.png');"></div>
+            <div class="rec-info">
+              <span class="rec-date">Tue 15 Dec</span>
+              <span class="rec-name">LOS ANGELES LAKERS</span>
+              <span class="rec-venue">4:00 AM • Crypto.com Arena</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Bottom Pill: Find Events Near You -->
+      <div class="floating-near-you-pill" onclick="openCityPicker()">
+        <div class="fn-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#000000"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <div class="fn-text-wrap">
+          <span class="fn-title">Find Events Near You</span>
+          <span class="fn-sub">Set your location</span>
+        </div>
+        <div class="fn-arrow">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 2: WATCHLIST / MANAGE TICKETS (ADMIN DASHBOARD)
+         ======================================================== -->
+    <section class="tab-view" id="viewWatchlist">
+      <!-- Header -->
+      <div class="manage-header">
+        <h1 class="manage-title">Manage Tickets</h1>
+        <!-- Subtabs: Account & Transfer History -->
+        <div class="segmented-pill-tabs">
+          <button class="seg-btn active" id="segAccountBtn" onclick="switchManageSubtab('account')">Account</button>
+          <button class="seg-btn" id="segTransfersBtn" onclick="switchManageSubtab('transfers')">Transfer history</button>
+        </div>
+      </div>
+
+      <!-- Subtab Container: Account -->
+      <div class="manage-content" id="manageAccountSubtab">
+        <div class="sub-label">SIGNED IN PROFILE</div>
+        
+        <!-- Profile Header Card -->
+        <div class="profile-summary-card">
+          <div class="psc-top">
+            <div class="psc-avatar" id="pscAvatar">TO</div>
+            <div class="psc-info">
+              <span class="psc-name" id="pscName">Toom</span>
+              <span class="psc-email" id="pscEmail">toom41170@gmail.com</span>
+            </div>
+            <div class="psc-badge" id="pscDaysBadge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span class="days-num" id="pscDaysNum">22</span>
+              <span class="days-text">DAYS LEFT</span>
+            </div>
+          </div>
+          <div class="psc-subtext">Choose an action below. Event changes sync to your public pages and ticket details.</div>
+        </div>
+
+        <!-- 2x2 Grid Actions -->
+        <div class="action-grid-2x2">
+          <!-- Card 1: Create event -->
+          <div class="action-card" onclick="openManageSubView('createEvent')">
+            <div class="ac-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+            </div>
+            <div class="ac-title">Create event</div>
+            <div class="ac-sub">Date, venue, tickets, pricing</div>
+          </div>
+
+          <!-- Card 2: Manage events -->
+          <div class="action-card" onclick="openManageSubView('manageEvents')">
+            <div class="ac-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div class="ac-title">Manage events</div>
+            <div class="ac-sub">Edit, view, or delete</div>
+          </div>
+
+          <!-- Card 3: Profile & location -->
+          <div class="action-card" onclick="openManageSubView('profileLocation')">
+            <div class="ac-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2.2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div class="ac-title">Profile & location</div>
+            <div class="ac-sub">Name, email, city, country</div>
+          </div>
+
+          <!-- Card 4: Settings -->
+          <div class="action-card" onclick="openManageSubView('settings')">
+            <div class="ac-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+            </div>
+            <div class="ac-title">Settings</div>
+            <div class="ac-sub">Notifications and more</div>
+          </div>
+        </div>
+
+        <!-- Confirmation Email Box -->
+        <div class="sub-label">CONFIRMATION EMAIL</div>
+        <div class="white-card">
+          <label class="form-label">Select Event</label>
+          <div class="event-picker-box" onclick="toggleEmailEventDropdown()">
+            <div class="ep-text">
+              <span class="ep-title" id="selectedEmailEventTitle">Choose an event</span>
+              <span class="ep-sub" id="selectedEmailEventSub">Tap to browse events</span>
+            </div>
+            <span class="ep-select-btn">SELECT</span>
+          </div>
+          <select id="emailEventSelect" style="display:none;" onchange="handleEmailEventChange(this)">
+            <!-- Populated via JS -->
+          </select>
+
+          <label class="form-label" style="margin-top: 14px;">Recipient Email</label>
+          <input type="email" id="confirmEmailRecipient" class="form-input" placeholder="recipient@example.com">
+
+          <button class="primary-blue-btn" onclick="sendConfirmationEmail()">Send Confirmation Email</button>
+        </div>
+
+        <!-- Developer Contact Box -->
+        <div class="sub-label">DEVELOPER CONTACT</div>
+        <div class="dev-contact-text">
+          Product or technical questions — <a href="https://t.me/ELIANEXCHANGE" target="_blank" class="dev-link">Telegram @ELIANEXCHANGE</a>
+        </div>
+      </div>
+
+      <!-- Subtab Container: Transfer History -->
+      <div class="manage-content" id="manageTransfersSubtab" style="display:none;">
+        <div class="sub-label">RECENT TICKET TRANSFERS</div>
+        <div id="transferHistoryList" class="transfer-history-list">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 3: MY TICKETS (MY EVENTS TAB)
+         ======================================================== -->
+    <section class="tab-view" id="viewTickets">
+      <!-- Header -->
+      <div class="my-events-header">
+        <div class="meh-left"></div>
+        <h1 class="meh-title">My Events</h1>
+        <div class="meh-right">
+          <button class="help-link-btn" onclick="alert('Ticketmaster Support: Contact your event organizer or visit Help Center.')">Help</button>
+        </div>
+      </div>
+
+      <!-- Subtabs: UPCOMING & PAST -->
+      <div class="events-segmented-bar">
+        <button class="esb-tab active" id="tabUpcoming" onclick="switchEventsTab('upcoming')">
+          UPCOMING (<span id="upcomingCount">3</span>)
+          <div class="esb-indicator"></div>
+        </button>
+        <button class="esb-tab" id="tabPast" onclick="switchEventsTab('past')">
+          PAST (<span id="pastCount">0</span>)
+          <div class="esb-indicator"></div>
+        </button>
+      </div>
+
+      <!-- My Events Scroll Area -->
+      <div class="my-events-scroll" id="upcomingEventsContainer">
+        <!-- Next Event Hero Banner -->
+        <div class="hero-event-card" id="heroEventCard" onclick="openHeroEvent()">
+          <div class="hec-header">
+            <span class="hec-countdown" id="hecCountdown">Next Event: 221 days</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+
+          <div class="hec-poster" id="hecPoster" style="background-image: url('/assets/u2_banner.png');"></div>
+
+          <div class="hec-info-box">
+            <div class="hec-date-badge" id="hecDateBadge">MON, JUL 05, 2027 • 7:30 PM</div>
+            <h2 class="hec-event-title" id="hecEventTitle">U2: THE GREATEST SHOW ON EARTH WORLD TOUR</h2>
+            <div class="hec-divider"></div>
+            <div class="hec-venue" id="hecVenue">San Siro Stadium - Milano</div>
+            <button class="hec-view-btn" onclick="event.stopPropagation(); handleViewTicketsClick();">View Tickets</button>
+          </div>
+        </div>
+
+        <!-- All Upcoming Events List -->
+        <div class="all-upcoming-wrap">
+          <h3 class="all-upcoming-heading">All Upcoming Events</h3>
+          <div class="all-upcoming-list" id="allUpcomingList">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Past Events Container -->
+      <div class="my-events-scroll" id="pastEventsContainer" style="display:none;">
+        <div class="empty-events-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <p>No past events to display.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 4: ACCOUNT TAB (AUTH & USER SETTINGS)
+         ======================================================== -->
+    <section class="tab-view" id="viewAccount">
+      <div class="manage-header">
+        <h1 class="manage-title">My Account</h1>
+      </div>
+
+      <div class="account-tab-content">
+        <!-- Logged-In User Card -->
+        <div class="account-card" id="accountUserCard">
+          <div class="acc-avatar" id="accTabAvatar">TO</div>
+          <div class="acc-details">
+            <h3 class="acc-name" id="accTabName">Toom</h3>
+            <span class="acc-email" id="accTabEmail">toom41170@gmail.com</span>
+            <span class="acc-loc" id="accTabLocation">📍 Los Angeles, United States</span>
+          </div>
+          <div class="acc-status-badge">Active Plan (22 Days Left)</div>
+        </div>
+
+        <div class="account-actions-list">
+          <div class="acc-action-row" onclick="openManageSubView('profileLocation')">
+            <div class="aar-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Personal Profile & Location</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+
+          <div class="acc-action-row" onclick="openManageSubView('settings')">
+            <div class="aar-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>App Settings & Transfer Fee</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+
+          <div class="acc-action-row" onclick="openAuthModal('switch')">
+            <div class="aar-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+              <span>Switch / Login to Another Account</span>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </div>
+        </div>
+
+        <div class="danger-zone-wrap">
+          <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 5: EVENT DETAILS & TICKETS VIEW (SINGLE EVENT)
+         ======================================================== -->
+    <div class="event-details-modal" id="eventDetailsModal">
+      <!-- Top Navigation -->
+      <div class="edm-header">
+        <button class="back-circle-btn" onclick="closeEventDetails()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <button class="barcode-circle-btn" onclick="openBarcodeModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="4" y1="6" x2="4" y2="18"></line><line x1="8" y1="6" x2="8" y2="18"></line><line x1="12" y1="6" x2="12" y2="18"></line><line x1="17" y1="6" x2="17" y2="18"></line><line x1="20" y1="6" x2="20" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Event Poster Banner -->
+      <div class="edm-banner" id="edmBanner" style="background-image: url('/assets/u2_banner.png');"></div>
+
+      <!-- Event Info Container -->
+      <div class="edm-info-card">
+        <div class="edm-date-badge" id="edmDateBadge">MON, JUL 05, 2027 • 7:30 PM</div>
+        <div class="edm-title-wrap">
+          <h1 class="edm-title" id="edmTitle">U2: THE GREATEST SHOW ON EARTH WORLD TOUR</h1>
+        </div>
+        <div class="edm-venue-row">
+          <span class="edm-venue" id="edmVenue">San Siro Stadium - Milano</span>
+          <span class="edm-ticket-count" id="edmTicketCount"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v12H4z"/></svg> x4</span>
+        </div>
+
+        <button class="edm-view-tickets-btn" onclick="handleViewTicketsClick()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><line x1="4" y1="6" x2="4" y2="18"></line><line x1="8" y1="6" x2="8" y2="18"></line><line x1="12" y1="6" x2="12" y2="18"></line><line x1="17" y1="6" x2="17" y2="18"></line><line x1="20" y1="6" x2="20" y2="18"></line></svg>
+          View Tickets
+        </button>
+      </div>
+
+      <!-- Segmented Tabs: Tickets & Extras -->
+      <div class="edm-subtabs">
+        <button class="edm-tab active" id="edmTabTickets" onclick="switchEdmTab('tickets')">Tickets</button>
+        <button class="edm-tab" id="edmTabExtras" onclick="switchEdmTab('extras')">Extras</button>
+      </div>
+
+      <!-- Tickets Tab Content -->
+      <div class="edm-content" id="edmContentTickets">
+        <div class="edm-order-row">
+          <div class="edm-order-info">
+            <span class="edm-order-num" id="edmOrderNum">Order #5-85630/UT5</span>
+            <span class="edm-order-tix" id="edmOrderTix">x4 Tickets</span>
+          </div>
+          <button class="dots-btn" onclick="alert('Order options')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+        </div>
+
+        <!-- Ticket Seats List -->
+        <div class="edm-seats-list" id="edmSeatsList">
+          <!-- Dynamically populated seat cards -->
+        </div>
+      </div>
+
+      <!-- Extras Tab Content -->
+      <div class="edm-content" id="edmContentExtras" style="display:none;">
+        <div class="no-extras-state">No extras for this event</div>
+      </div>
+
+      <!-- Floating Action Pill (Upgrade, Transfer, Sell) -->
+      <div class="floating-ticket-pill">
+        <button class="ftp-action" onclick="alert('Upgrades not currently available for this event.')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+          <span>Upgrade</span>
+        </button>
+        <div class="ftp-divider"></div>
+        <button class="ftp-action blue" onclick="startTransferFlow()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+          <span style="color:#026cdf; font-weight:700;">Transfer</span>
+        </button>
+        <div class="ftp-divider"></div>
+        <button class="ftp-action" onclick="alert('Resale is currently restricted by the event organizer.')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          <span>Sell</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Scrollable Ticket View -->
-    <main class="ticket-view-scroll" id="ticketViewScroll">
-      
-      <!-- Ticket Carousel Stage -->
-      <div class="carousel-container" id="carouselContainer">
-        <div class="carousel-track" id="carouselTrack">
-          <!-- Ticket Cards Injected by JavaScript -->
-        </div>
+    <!-- ========================================================
+         2FA / AUTHENTICATION MODAL (VERIFICATION CODE SCREEN)
+         ======================================================== -->
+    <div class="auth-2fa-modal" id="auth2faModal">
+      <div class="auth-blue-bar">
+        <button class="abb-cancel" onclick="close2faModal()">Cancel</button>
+        <span class="abb-title">Authentication</span>
+        <div style="width:50px;"></div>
       </div>
 
-      <!-- Carousel Pagination Dots -->
-      <div class="pagination-dots" id="paginationDots">
-        <!-- Dots injected by JS -->
+      <!-- Spinner Phase -->
+      <div class="auth-spinner-phase" id="authSpinnerPhase">
+        <div class="ios-spinner"></div>
       </div>
 
-      <!-- Action Buttons: Transfer / Sell -->
-      <div class="action-buttons-group">
-        <button class="tm-btn primary-btn" id="transferBtn">
-          Transfer
-        </button>
-        <button class="tm-btn secondary-btn" id="sellBtn" disabled>
-          Sell
-        </button>
+      <!-- Code Entry Phase -->
+      <div class="auth-code-phase" id="authCodePhase" style="display:none;">
+        <h2 class="auth-code-heading">Authenticate Your Account</h2>
+        <p class="auth-code-desc">A one-time code has been sent to <strong>*****4835</strong>.<br>Please enter your code below to continue.</p>
+
+        <div class="auth-field-wrap">
+          <label class="auth-label">One-Time Code</label>
+          <input type="text" id="twoFactorCodeInput" class="auth-input" maxlength="6" placeholder="" oninput="handleCodeInput(this.value)">
+        </div>
+
+        <p class="auth-helper-text">It may take a minute to receive your code.</p>
+
+        <button class="auth-confirm-btn" id="confirmCodeBtn" disabled onclick="submit2faCode()">Confirm Code</button>
       </div>
+    </div>
 
-      <!-- REAL INTERACTIVE VENUE MAP -->
-      <section class="venue-map-card" id="venueMapCard">
-        <div class="map-interactive-wrapper">
-          <iframe
-            id="googleMapIframe"
-            class="google-map-frame"
-            loading="lazy"
-            allowfullscreen
-            referrerpolicy="no-referrer-when-downgrade"
-            src="about:blank">
-          </iframe>
-          <div class="map-overlay-badge" id="mapOverlayBadge">
-            <span class="pulse-pin"></span>
-            <span id="mapBadgeVenue">Arrow</span>
-          </div>
-        </div>
-        <div class="venue-info-bar">
-          <div class="venue-text">
-            <strong id="venueNameText">Arrow</strong>
-            <span id="venueCityText">Allentown, PA</span>
-          </div>
-          <a href="#" target="_blank" id="googleMapsDirectionsLink" class="directions-link">
-            Directions &rsaquo;
-          </a>
-        </div>
-      </section>
+    <!-- ========================================================
+         TRANSFER STEP 1: SELECT TICKETS TO TRANSFER
+         ======================================================== -->
+    <div class="transfer-drawer-modal" id="transferStep1Modal">
+      <div class="tdm-backdrop" onclick="closeTransferDrawers()"></div>
+      <div class="tdm-sheet">
+        <div class="tdm-grab-bar"></div>
+        <h3 class="tdm-sheet-title">SELECT TICKETS TO TRANSFER</h3>
 
-      <div class="bottom-spacer"></div>
-    </main>
-
-    <!-- ============================================== -->
-    <!-- TRANSFER BOTTOM SHEET MODAL (Exact 5 Steps)    -->
-    <!-- ============================================== -->
-    <div class="modal-backdrop" id="transferBackdrop"></div>
-
-    <div class="bottom-sheet" id="transferModal">
-      <div class="sheet-drag-handle"></div>
-
-      <!-- STEP 1: SELECT TICKETS TO TRANSFER -->
-      <div class="sheet-step" id="stepSelectTickets">
-        <div class="sheet-header">
-          <h2 class="sheet-title">SELECT TICKETS TO TRANSFER</h2>
-          <button class="sheet-close-btn" id="sheetCloseBtn1" aria-label="Close transfer">&times;</button>
+        <div class="tdm-sec-header">
+          <span class="tdm-sec-name" id="tsSecName">SEC: GA, General Admission</span>
+          <span class="tdm-tix-count" id="tsTixCount">🎟 4 Tickets</span>
         </div>
 
-        <div class="safety-notice">
-          <div class="notice-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-          </div>
-          <p class="notice-text">
-            Only transfer tickets to people you know and trust to ensure everyone stays safe
-          </p>
+        <!-- Seat selection badges -->
+        <div class="tdm-seats-grid" id="tsSeatsGrid">
+          <!-- Dynamically populated seats with selectable radios -->
         </div>
 
-        <div class="section-row-header">
-          <div class="section-row-info">
-            <strong id="sheetSecRowText">Sec Floor, Row 0</strong>
-          </div>
-          <div class="ticket-total-count" id="sheetTicketTotalBadge">
-            <span class="ticket-icon-glyph">♦</span>
-            <span id="sheetTicketTotalCount">4 tickets</span>
-          </div>
-        </div>
-
-        <!-- Horizontal Seat Selection Cards -->
-        <div class="seat-cards-carousel" id="seatCardsCarousel">
-          <!-- Rendered by JS -->
-        </div>
-
-        <!-- Step 1 Footer -->
-        <div class="sheet-footer">
-          <div class="selected-count-label" id="selectedCountLabel">
-            0 Selected
-          </div>
-          <button class="transfer-to-btn" id="transferToBtn" disabled>
-            TRANSFER TO &gt;
-          </button>
+        <div class="tdm-footer">
+          <button class="primary-black-btn" id="proceedToRecipientBtn" onclick="proceedToRecipientDetails()">Next</button>
         </div>
       </div>
+    </div>
 
-      <!-- STEP 2: TRANSFER TO (Choose Method) -->
-      <div class="sheet-step hidden" id="stepTransferTo">
-        <div class="sheet-header">
-          <h2 class="sheet-title">TRANSFER TO</h2>
-          <button class="sheet-close-btn" id="sheetCloseBtn2" aria-label="Close transfer">&times;</button>
-        </div>
+    <!-- ========================================================
+         TRANSFER STEP 2: RECIPIENT DETAILS
+         ======================================================== -->
+    <div class="transfer-drawer-modal" id="transferStep2Modal">
+      <div class="tdm-backdrop" onclick="closeTransferDrawers()"></div>
+      <div class="tdm-sheet">
+        <div class="tdm-grab-bar"></div>
+        <h3 class="tdm-sheet-title">RECIPIENT DETAILS</h3>
 
-        <div class="transfer-options-list">
-          <button class="transfer-option-item" id="optSelectContacts">
-            <span class="opt-label">Select From Contacts</span>
-            <span class="opt-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </span>
-          </button>
-
-          <button class="transfer-option-item" id="optManualRecipient">
-            <span class="opt-label">Manually Enter A Recipient</span>
-            <span class="opt-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </span>
-          </button>
-        </div>
-
-        <div class="send-illustration-box">
-          <div class="send-plane-circle">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        <div class="recipient-form">
+          <div class="rf-group">
+            <label class="rf-label">First Name</label>
+            <input type="text" id="recipFirstName" class="rf-input" placeholder="">
           </div>
-          <h3 class="send-heading">Transfer Tickets Via Email or Text Message</h3>
-          <p class="send-subtext">Select an Email or mobile number to transfer tickets to your recipient.</p>
+          <div class="rf-group">
+            <label class="rf-label">Last Name</label>
+            <input type="text" id="recipLastName" class="rf-input" placeholder="">
+          </div>
+          <div class="rf-group">
+            <label class="rf-label">Email</label>
+            <input type="email" id="recipEmail" class="rf-input" placeholder="">
+          </div>
+          <button class="use-mobile-link" onclick="toggleContactType()">Use Mobile Number Instead</button>
+
+          <div class="rf-group" style="margin-top:12px;">
+            <label class="rf-label">Note</label>
+            <textarea id="recipNote" class="rf-textarea" rows="3" placeholder=""></textarea>
+          </div>
         </div>
 
-        <div class="sheet-footer simple-footer">
-          <button class="text-link-btn" id="backToStep1Btn">&lt; BACK</button>
+        <div class="tdm-footer-between">
+          <button class="blue-back-link" onclick="backToStep1()">&lt; BACK</button>
+          <button class="primary-black-btn" id="finishTransferBtn" onclick="executeTransfer()">Transfer Tickets</button>
         </div>
       </div>
+    </div>
 
-      <!-- STEP 3: RECIPIENT FORM -->
-      <div class="sheet-step hidden" id="stepTransferForm">
-        <div class="sheet-header">
-          <h2 class="sheet-title">TRANSFER TICKETS</h2>
-          <button class="sheet-close-btn" id="sheetCloseBtn3" aria-label="Close transfer">&times;</button>
+    <!-- ========================================================
+         TRANSFER FEE INTERRUPTION MODAL
+         ======================================================== -->
+    <div class="fee-interruption-modal" id="feeInterruptionModal">
+      <div class="fim-card">
+        <div class="fim-icon-circle">💳</div>
+        <h2 class="fim-title">Transfer Processing Fee Required</h2>
+        <p class="fim-text">The ticket issuer requires a verified transfer protection fee of <strong id="feeAmountDisplay">$50.47</strong> before the transfer link can be delivered.</p>
+        <button class="primary-blue-btn" onclick="payTransferFeeAndComplete()">Pay & Complete Transfer</button>
+        <button class="text-cancel-btn" onclick="cancelTransferFee()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         BLANK PAGE OVERLAY (CONTROLLED VIA SETTINGS TOGGLE)
+         ======================================================== -->
+    <div class="blank-page-overlay" id="blankPageOverlay">
+      <button class="blank-page-close" onclick="closeBlankPage()">✕</button>
+    </div>
+
+    <!-- ========================================================
+         TICKET INFORMATION SHEET (WHEN A SEAT IS TAPPED)
+         ======================================================== -->
+    <div class="ticket-info-modal" id="ticketInfoModal">
+      <div class="tim-backdrop" onclick="closeTicketInfo()"></div>
+      <div class="tim-sheet">
+        <div class="tdm-grab-bar"></div>
+        <h3 class="tim-title">Ticket Information</h3>
+
+        <!-- Accordion 1: Important Notes -->
+        <div class="tim-accordion">
+          <div class="tia-header" onclick="toggleAccordion('tiaNotes')">
+            <span>IMPORTANT NOTES</span>
+            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tia-body" id="tiaNotes">
+            <p id="tiEntranceDetails">Gate 4 Entrance. Please arrive early for security checks and digital ticket verification.</p>
+          </div>
         </div>
 
-        <div class="form-selection-summary">
-          <h3 class="form-selected-title" id="formSelectedTitle">4 Tickets Selected</h3>
-          <p class="form-selected-subtitle" id="formSelectedSubtitle">Sec Floor Row 0 Seat</p>
+        <!-- Accordion 2: Order Details -->
+        <div class="tim-accordion open">
+          <div class="tia-header" onclick="toggleAccordion('tiaOrder')">
+            <span>ORDER DETAILS</span>
+            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          </div>
+          <div class="tia-body" id="tiaOrder" style="display:block;">
+            <div class="tio-label">Order Number</div>
+            <div class="tio-val" id="tiOrderNum">5-85630/UT5</div>
+            <div class="tio-label" style="margin-top:12px;">Purchase Date</div>
+            <div class="tio-val" id="tiPurchaseDate">Thu, Oct 29, 2026</div>
+          </div>
         </div>
 
-        <form id="transferForm" class="recipient-form" onsubmit="return false;">
+        <!-- Accordion 3: Event Information -->
+        <div class="tim-accordion">
+          <div class="tia-header" onclick="toggleAccordion('tiaEvent')">
+            <span>EVENT INFORMATION</span>
+            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="tia-body" id="tiaEvent">
+            <p id="tiVenueDesc">Venue: San Siro Stadium, Milano. No professional cameras allowed. Terms & Conditions apply.</p>
+          </div>
+        </div>
+
+        <div class="tim-terms">Terms & Conditions</div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         BARCODE MODAL
+         ======================================================== -->
+    <div class="barcode-view-modal" id="barcodeViewModal">
+      <div class="bvm-header">
+        <button class="bvm-close" onclick="closeBarcodeModal()">✕</button>
+        <span class="bvm-title">Ticket Barcode</span>
+        <div style="width:24px;"></div>
+      </div>
+      <div class="bvm-card">
+        <div class="bvm-event-name" id="bvmEventName">U2: WORLD TOUR</div>
+        <div class="bvm-seat-badge" id="bvmSeatBadge">SEC GA • SEAT 1</div>
+        <div class="bvm-barcode-lines">
+          <div class="animated-laser"></div>
+          <svg width="240" height="90" viewBox="0 0 240 90">
+            <g fill="#000000">
+              <rect x="10" y="5" width="4" height="80"/>
+              <rect x="18" y="5" width="2" height="80"/>
+              <rect x="24" y="5" width="6" height="80"/>
+              <rect x="34" y="5" width="3" height="80"/>
+              <rect x="42" y="5" width="5" height="80"/>
+              <rect x="52" y="5" width="2" height="80"/>
+              <rect x="58" y="5" width="4" height="80"/>
+              <rect x="66" y="5" width="8" height="80"/>
+              <rect x="78" y="5" width="3" height="80"/>
+              <rect x="85" y="5" width="5" height="80"/>
+              <rect x="94" y="5" width="2" height="80"/>
+              <rect x="100" y="5" width="6" height="80"/>
+              <rect x="110" y="5" width="4" height="80"/>
+              <rect x="118" y="5" width="3" height="80"/>
+              <rect x="125" y="5" width="7" height="80"/>
+              <rect x="136" y="5" width="2" height="80"/>
+              <rect x="142" y="5" width="5" height="80"/>
+              <rect x="151" y="5" width="3" height="80"/>
+              <rect x="158" y="5" width="6" height="80"/>
+              <rect x="168" y="5" width="2" height="80"/>
+              <rect x="174" y="5" width="5" height="80"/>
+              <rect x="183" y="5" width="3" height="80"/>
+              <rect x="190" y="5" width="7" height="80"/>
+              <rect x="201" y="5" width="4" height="80"/>
+              <rect x="209" y="5" width="2" height="80"/>
+              <rect x="215" y="5" width="6" height="80"/>
+              <rect x="225" y="5" width="4" height="80"/>
+            </g>
+          </svg>
+        </div>
+        <div class="bvm-code-text" id="bvmCodeText">8192 0481 0294 1102</div>
+        <div class="bvm-subtext">Screenshots will not get you in. View in Google/Apple Wallet.</div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         SUB-VIEW: CREATE EVENT
+         ======================================================== -->
+    <div class="manage-subview" id="subViewCreateEvent">
+      <div class="msv-header">
+        <button class="msv-back" onclick="closeManageSubView('createEvent')">&lt; Back</button>
+        <span class="msv-title">Create event</span>
+        <div style="width:50px;"></div>
+      </div>
+      <div class="msv-body">
+        <!-- File upload replaces poster -->
+        <div class="form-group">
+          <label class="form-label">Event Poster Image</label>
+          <input type="file" id="cePosterUpload" accept="image/*" class="form-input-file" onchange="handlePosterUpload(event)">
+          <div class="form-helper">Uploading a file replaces the Ticketmaster poster for this submission.</div>
+        </div>
+
+        <!-- Ticketmaster Lookup Box -->
+        <div class="tm-lookup-box">
+          <div class="tml-header">
+            <span class="tml-title">Look up on Ticketmaster</span>
+            <div class="tml-tabs">
+              <button class="tml-tab active">Events</button>
+              <button class="tml-tab">Venues</button>
+            </div>
+          </div>
+          <div class="tml-helper">Search artist or tour in United States ... pick a show date to fill dashboard fields. Change the flag in the header to search another market.</div>
+          <input type="text" id="tmLookupInput" class="tml-input" placeholder="Artist, tour, or event name" oninput="mockTmLookup(this.value)">
+          <div id="tmLookupResults" class="tml-results" style="display:none;"></div>
+        </div>
+
+        <!-- Event Fields -->
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" id="ceName" class="form-input" placeholder="e.g. Summer Night Live">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Event type</label>
+          <div class="segmented-control">
+            <button class="sc-btn active" id="btnTypeStandard" onclick="setEventType('Standard')">Standard</button>
+            <button class="sc-btn" id="btnTypeFestival" onclick="setEventType('Festival')">Festival</button>
+          </div>
+        </div>
+
+        <div class="form-row-2">
           <div class="form-group">
-            <label for="inputFirstName" class="form-label">First Name</label>
-            <input type="text" id="inputFirstName" class="form-input" placeholder="First Name" required>
+            <label class="form-label">Date &amp; start time</label>
+            <input type="date" id="ceEventDate" class="form-input">
           </div>
-
           <div class="form-group">
-            <label for="inputLastName" class="form-label">Last Name</label>
-            <input type="text" id="inputLastName" class="form-input" placeholder="Last Name" required>
+            <label class="form-label">Time</label>
+            <input type="time" id="ceEventTime" class="form-input" value="19:30">
           </div>
+        </div>
 
+        <div class="form-row-2">
           <div class="form-group">
-            <label for="inputEmailOrPhone" class="form-label">Email or Mobile Number</label>
-            <input type="text" id="inputEmailOrPhone" class="form-input" placeholder="Email or Mobile Number" required>
+            <label class="form-label">Purchase date &amp; time</label>
+            <input type="date" id="cePurchaseDate" class="form-input">
           </div>
-
           <div class="form-group">
-            <label for="inputNote" class="form-label">Note</label>
-            <textarea id="inputNote" class="form-textarea" placeholder="Note" rows="3"></textarea>
+            <label class="form-label">Time</label>
+            <input type="time" id="cePurchaseTime" class="form-input" value="10:00">
+          </div>
+        </div>
+        <div class="form-helper" style="margin-top:-8px; margin-bottom:12px;">Used in Order Details when a ticket seat is tapped.</div>
+
+        <div class="form-group">
+          <label class="form-label">Venue &amp; location</label>
+          <input type="text" id="ceVenue" class="form-input" placeholder="e.g. Madison Square Garden - New York, NY">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Entrance details</label>
+          <input type="text" id="ceEntrance" class="form-input" placeholder="e.g. 5th 3rd Gate">
+          <div class="form-helper">Shown in the Important Notes section on ticket information.</div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Section</label>
+            <input type="text" id="ceSection" class="form-input" value="GA">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Number of tickets</label>
+            <input type="number" id="ceTicketCount" class="form-input" value="4" min="1" max="10">
+          </div>
+        </div>
+
+        <button class="primary-blue-btn" onclick="saveNewEvent()">Save Event</button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         SUB-VIEW: MANAGE EVENTS (MY EVENTS LIST)
+         ======================================================== -->
+    <div class="manage-subview" id="subViewManageEvents">
+      <div class="msv-header">
+        <button class="msv-back" onclick="closeManageSubView('manageEvents')">&lt; My events</button>
+        <span class="msv-title">Manage events</span>
+        <div style="width:50px;"></div>
+      </div>
+      <div class="msv-body">
+        <div class="msv-desc">Create, edit, or remove events you host. Use the eye icon to hide or show any ticket on My Tickets.</div>
+
+        <div class="sub-label">EVENTS YOU HOST</div>
+        <div class="manage-events-list" id="manageEventsList">
+          <!-- Dynamically populated events with Edit / View / Delete and Eye toggle -->
+        </div>
+
+        <div class="sub-label" style="margin-top:24px;">TICKETS TRANSFERRED TO YOU</div>
+        <div class="transferred-to-you-list" id="transferredToYouList">
+          <div class="empty-mini-card">No tickets have been transferred to your account yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         SUB-VIEW: PROFILE & LOCATION
+         ======================================================== -->
+    <div class="manage-subview" id="subViewProfileLocation">
+      <div class="msv-header">
+        <button class="msv-back" onclick="closeManageSubView('profileLocation')">&lt; Profile &amp; location</button>
+        <span class="msv-title">Profile</span>
+        <div style="width:50px;"></div>
+      </div>
+      <div class="msv-body">
+        <div class="msv-desc">Edit what appears on My Account. Stored in your app profile; updating email or name here does not change your login credentials.</div>
+
+        <div class="white-card">
+          <div class="sub-label" style="margin-top:0;">PROFILE DISPLAY</div>
+          <div class="form-helper" style="margin-bottom:12px;">Shown on My Account. You can leave this blank or update it anytime.</div>
+
+          <label class="form-label">Display name</label>
+          <input type="text" id="plDisplayName" class="form-input" placeholder="Serena">
+
+          <label class="form-label" style="margin-top:12px;">Email</label>
+          <div class="form-helper" style="margin-bottom:6px;">Shown on My Account. You can change this to your preferred contact email.</div>
+          <input type="email" id="plEmail" class="form-input" placeholder="toom41170@gmail.com">
+        </div>
+
+        <div class="white-card" style="margin-top:14px;">
+          <div class="sub-label" style="margin-top:0;">LOCATION</div>
+          <div class="form-helper" style="margin-bottom:12px;">Shown on My Account. Optional; update whenever you like.</div>
+
+          <label class="form-label">City</label>
+          <input type="text" id="plCity" class="form-input" placeholder="London">
+
+          <label class="form-label" style="margin-top:12px;">Country</label>
+          <input type="text" id="plCountry" class="form-input" placeholder="United Kingdom">
+        </div>
+
+        <button class="primary-blue-btn" style="margin-top:16px;" onclick="saveProfileAndLocation()">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         SUB-VIEW: SETTINGS
+         ======================================================== -->
+    <div class="manage-subview" id="subViewSettings">
+      <div class="msv-header">
+        <button class="msv-back" onclick="closeManageSubView('settings')">&lt; Settings</button>
+        <span class="msv-title">Settings</span>
+        <div style="width:50px;"></div>
+      </div>
+      <div class="msv-body">
+        <!-- Wallet pass purchase section -->
+        <div class="settings-pass-card">
+          <div class="spc-top">
+            <span class="spc-title">Wallet passes remaining</span>
+            <span class="spc-count" id="settingsPassesCount">0</span>
           </div>
 
-          <div class="form-actions-bar">
-            <button type="button" class="back-link" id="backToStep2Btn">&lt; BACK</button>
-            <button type="submit" class="submit-transfer-btn" id="submitTransferBtn">
-              TRANSFER 4 TICKETS
-            </button>
+          <div class="spc-stepper-row">
+            <span class="spc-label">Quantity</span>
+            <div class="stepper-box">
+              <button class="step-btn" onclick="adjustPassQuantity(-1)">−</button>
+              <span class="step-val" id="passQuantityVal">2</span>
+              <button class="step-btn" onclick="adjustPassQuantity(1)">+</button>
+            </div>
+            <span class="spc-price" id="passPriceDisplay">₦6,000</span>
+          </div>
+
+          <button class="primary-blue-btn" id="payFlutterwaveBtn" onclick="buyPassCredits()">Pay ₦6,000 with Flutterwave</button>
+          <div class="form-helper" style="text-align:center; margin-top:8px;">Minimum 2 passes (₦6,000)</div>
+        </div>
+
+        <!-- Toggles Section -->
+        <div class="settings-toggles-card">
+          <div class="toggle-row">
+            <div class="tr-label-wrap">
+              <span class="tr-title">Enable Apple Wallet for ticket transfers</span>
+              <span class="tr-sub">Buy wallet pass credits to enable Apple Wallet for recipients.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="toggleAppleWallet" onchange="handleSettingToggle('enableAppleWallet', this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="tr-label-wrap">
+              <span class="tr-title">💼 Use Google Wallet badge</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="toggleGoogleWallet" onchange="handleSettingToggle('useGoogleWallet', this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Ticket Details Section -->
+        <div class="sub-label">Ticket details</div>
+        <div class="settings-toggles-card">
+          <div class="toggle-row">
+            <div class="tr-label-wrap">
+              <span class="tr-title">Show transfer accepted on ticket cards</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="toggleTransferAccepted" onchange="handleSettingToggle('showTransferAccepted', this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="stc-field-group">
+            <label class="form-label">Accepted by (name shown on ticket)</label>
+            <input type="text" id="settingAcceptedByName" class="form-input" placeholder="Mary Flores" onchange="handleSettingInput('acceptedByName', this.value)">
+          </div>
+
+          <div class="toggle-row" style="margin-top:14px;">
+            <div class="tr-label-wrap">
+              <span class="tr-title">Show blank page when opening ticket details</span>
+              <span class="tr-sub">When on, tapping "View Tickets" on the event page opens a blank white page instead of the ticket details.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="toggleBlankPage" onchange="handleSettingToggle('showBlankPage', this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Transfer Section -->
+        <div class="sub-label">Transfer</div>
+        <div class="settings-toggles-card">
+          <div class="toggle-row">
+            <div class="tr-label-wrap">
+              <span class="tr-title">Enable transfer fee interruption screen</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="toggleTransferFee" onchange="handleSettingToggle('enableTransferFee', this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="stc-field-group">
+            <label class="form-label">Transfer fee shown on interruption screen</label>
+            <input type="text" id="settingTransferFeeAmount" class="form-input" placeholder="$50.47" value="$50.47" onchange="handleSettingInput('transferFeeAmount', this.value)">
+          </div>
+        </div>
+
+        <button class="primary-blue-btn" style="margin-top:16px;" onclick="saveSettings()">Save Settings</button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL: AUTH (LOGIN / REGISTER MODAL)
+         ======================================================== -->
+    <div class="auth-modal" id="authModal">
+      <div class="auth-modal-card">
+        <button class="am-close" onclick="closeAuthModal()">✕</button>
+        <div class="am-header">
+          <div class="tm-mini-logo big">t</div>
+          <h2 class="am-title" id="authModalTitle">Sign In to Your Account</h2>
+          <p class="am-sub">Event edits, tickets, and transfers are personal to your account.</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="loginEmail" class="form-input" required placeholder="toom41170@gmail.com" value="toom41170@gmail.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-input" required placeholder="•••••" value="12345">
+          </div>
+          <button type="submit" class="primary-blue-btn">Sign In</button>
+          <div class="am-switch-text">
+            Don't have an account? <a href="#" onclick="toggleAuthMode('register'); return false;">Create one</a>
+          </div>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" style="display:none;" onsubmit="handleRegisterSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Full Name / Display Name</label>
+            <input type="text" id="regDisplayName" class="form-input" required placeholder="Toom">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="regEmail" class="form-input" required placeholder="yourname@gmail.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="regPassword" class="form-input" required placeholder="Password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" id="regCity" class="form-input" placeholder="Los Angeles" value="Los Angeles">
+          </div>
+          <button type="submit" class="primary-blue-btn">Create Personal Account</button>
+          <div class="am-switch-text">
+            Already have an account? <a href="#" onclick="toggleAuthMode('login'); return false;">Sign In</a>
           </div>
         </form>
       </div>
-
-      <!-- STEP 4: PROCESSING -->
-      <div class="sheet-step hidden" id="stepSending">
-        <div class="transferring-loader">
-          <div class="tm-spinner"></div>
-          <h3 class="loading-title">Transferring Tickets...</h3>
-          <p class="loading-sub">Securing tickets and sending transfer link to recipient.</p>
-        </div>
-      </div>
-
-      <!-- STEP 5: SUCCESS -->
-      <div class="sheet-step hidden" id="stepSuccess">
-        <div class="success-box">
-          <div class="success-icon-badge">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-          <h3 class="success-title">Transfer Sent!</h3>
-          <p class="success-message" id="successMessageText">
-            We've notified <strong id="successRecipientName">Recipient</strong> with instructions to claim the tickets.
-          </p>
-          <div class="transferred-summary-card">
-            <div class="summary-line">
-              <span>Tickets:</span>
-              <strong id="successTicketList">Seat 1, Seat 2, Seat 3, Seat 4</strong>
-            </div>
-            <div class="summary-line">
-              <span>Sent to:</span>
-              <strong id="successRecipientContact">contact@example.com</strong>
-            </div>
-            <div class="summary-line">
-              <span>Status:</span>
-              <span class="status-pill pending">Pending Acceptance</span>
-            </div>
-          </div>
-          <button class="tm-btn primary-btn done-btn" id="finishTransferBtn">
-            Done
-          </button>
-        </div>
-      </div>
-
     </div>
 
-    <!-- TICKET DETAILS MODAL (SafeTix Barcode, Order) -->
-    <div class="modal-backdrop" id="detailsBackdrop"></div>
-    <div class="bottom-sheet details-sheet" id="detailsModal">
-      <div class="sheet-drag-handle"></div>
-      <div class="sheet-header">
-        <h2 class="sheet-title">Ticket Details</h2>
-        <button class="sheet-close-btn" id="closeDetailsBtn">&times;</button>
-      </div>
-      <div class="details-body" id="detailsBody">
-        <!-- Populated by JS -->
-      </div>
-    </div>
-
-    <!-- SECRET PASSWORD PROMPT MODAL -->
-    <div class="modal-backdrop" id="secretAuthBackdrop"></div>
-    <div class="secret-pin-modal" id="secretPinModal">
-      <div class="pin-modal-header">
-        <span class="lock-icon">🔒</span>
-        <h3>Admin Access</h3>
-      </div>
-      <p class="pin-prompt-text">Enter security passcode to continue</p>
-      <form id="secretPinForm" onsubmit="handleSecretAuth(event)">
-        <input type="password" id="secretPinInput" class="pin-input" placeholder="•••••" maxlength="10" autofocus>
-        <p id="pinErrorMessage" class="pin-error-text"></p>
-        <div class="pin-btn-row">
-          <button type="button" class="pin-cancel-btn" onclick="closeSecretAuth()">Cancel</button>
-          <button type="submit" class="pin-submit-btn">Unlock</button>
+    <!-- ========================================================
+         BOTTOM NAVIGATION BAR (4 TABS EXACTLY MATCHING APP)
+         ======================================================== -->
+    <nav class="bottom-nav-bar">
+      <!-- Tab 1: Home -->
+      <button class="nav-tab-btn active" id="btnTabHome" onclick="switchMainTab('viewHome')">
+        <div class="tab-icon-circle blue">
+          <span class="tm-tab-logo">t</span>
         </div>
-      </form>
-    </div>
+        <span class="nav-label">Home</span>
+      </button>
 
-  </div>
+      <!-- Tab 2: Watchlist -->
+      <button class="nav-tab-btn" id="btnTabWatchlist" onclick="switchMainTab('viewWatchlist')">
+        <svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        <span class="nav-label">Watchlist</span>
+      </button>
 
+      <!-- Tab 3: My Tickets -->
+      <button class="nav-tab-btn" id="btnTabTickets" onclick="switchMainTab('viewTickets')">
+        <svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span class="nav-label">My Tickets</span>
+      </button>
+
+      <!-- Tab 4: Account -->
+      <button class="nav-tab-btn" id="btnTabAccount" onclick="switchMainTab('viewAccount')">
+        <div class="badge-icon-wrap">
+          <svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span class="tab-red-badge">1</span>
+        </div>
+        <span class="nav-label">Account</span>
+      </button>
+    </nav>
+
+  </div><!-- /app-shell -->
+
+  <!-- Application Logic -->
   <script src="app.js"></script>
 </body>
 </html>

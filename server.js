@@ -1,29 +1,171 @@
-// server.js — Express API backed by Supabase with resilient in-memory fallback
+// server.js — Express API with User Accounts, Multi-User Scoped Events, Settings & Ticket Management
 require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const supabase = require('./utils/supabase');
 
-const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+
+// ----------------------------------------------------------------
+// In-Memory Seed State (Full Multi-User Account Support)
+// ----------------------------------------------------------------
+const DEFAULT_USER_ID = 'user-toom-001';
+
+let memoryUsers = [
+  {
+    id: DEFAULT_USER_ID,
+    email: 'toom41170@gmail.com',
+    password: '12345',
+    display_name: 'Toom',
+    city: 'Los Angeles',
+    country: 'United States',
+    days_left: 22,
+    wallet_passes: 0,
+    settings: {
+      enableAppleWallet: false,
+      useGoogleWallet: false,
+      showTransferAccepted: false,
+      acceptedByName: 'Mary Flores',
+      showBlankPage: false,
+      enableTransferFee: false,
+      transferFeeAmount: '$50.47'
+    },
+    created_at: new Date().toISOString()
+  }
+];
+
+let memoryEvents = [
+  {
+    id: 1,
+    user_id: DEFAULT_USER_ID,
+    artist_name: 'U2: THE GREATEST SHOW ON EARTH WORLD TOUR',
+    tour_name: 'The Greatest Show on Earth World Tour',
+    event_type: 'Standard',
+    badge_text: 'Artist Presale',
+    section: 'GA',
+    row_name: '',
+    seat_type: 'General Admission',
+    venue_name: 'San Siro Stadium',
+    venue_city: 'Milano',
+    event_date: 'Mon, Jul 05, 2027 • 7:30 PM',
+    purchase_date: 'Thu, Oct 29, 2026',
+    entrance_details: 'Gate 4 Entrance',
+    countdown_target: new Date('2027-07-05T19:30:00Z').toISOString(),
+    days_until: 221,
+    ticket_price: 145.00,
+    service_fee: 24.50,
+    order_number: '5-85630/UT5',
+    artist_image: '/assets/u2_banner.png',
+    map_image: '/assets/venue_map_crop.png',
+    favicon_url: '',
+    ticket_count: 4,
+    is_hidden: false,
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    user_id: DEFAULT_USER_ID,
+    artist_name: 'STRAY KIDS WORLD TOUR [RUN IT ARNHEM]',
+    tour_name: '[RUN IT ARNHEM]',
+    event_type: 'Standard',
+    badge_text: 'VIP Package',
+    section: 'SEC 102',
+    row_name: 'F',
+    seat_type: 'Reserved Seating',
+    venue_name: 'GelreDome',
+    venue_city: 'Arnhem',
+    event_date: 'Tue, Jul 27, 2027 • 7:30 PM',
+    purchase_date: 'Mon, Nov 02, 2026',
+    entrance_details: 'Main Entrance North',
+    countdown_target: new Date('2027-07-27T19:30:00Z').toISOString(),
+    days_until: 243,
+    ticket_price: 185.00,
+    service_fee: 28.00,
+    order_number: '7-99120/SKZ',
+    artist_image: '/assets/straykids_banner.png',
+    map_image: '/assets/venue_map_crop.png',
+    ticket_count: 2,
+    is_hidden: false,
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 3,
+    user_id: DEFAULT_USER_ID,
+    artist_name: 'INDIVIDUAL GENERAL CORONA CAPITAL 2026',
+    tour_name: 'Corona Capital 2026',
+    event_type: 'Festival',
+    badge_text: 'Individual General',
+    section: 'General',
+    row_name: '0',
+    seat_type: 'General Admission',
+    venue_name: 'Autódromo Hermanos Rodríguez',
+    venue_city: 'Mexico City',
+    event_date: 'Sun, Nov 22, 2026 • 3:00 PM',
+    purchase_date: 'Fri, Sep 18, 2026',
+    entrance_details: 'Puerta 9',
+    countdown_target: new Date('2026-11-22T15:00:00Z').toISOString(),
+    days_until: 0,
+    ticket_price: 120.00,
+    service_fee: 19.50,
+    order_number: '3-44109/CC26',
+    artist_image: '/assets/corona_banner.png',
+    map_image: '/assets/venue_map_crop.png',
+    ticket_count: 2,
+    is_hidden: false,
+    updated_at: new Date().toISOString()
+  }
+];
+
+let memoryTickets = [
+  // U2 tickets (4)
+  { id: 101, event_id: 1, user_id: DEFAULT_USER_ID, seat_label: 'GA1', seat_number: 1, section: 'GA', row_name: 'GA1', status: 'active', barcode_code: '8192048102941102' },
+  { id: 102, event_id: 1, user_id: DEFAULT_USER_ID, seat_label: 'GA2', seat_number: 2, section: 'GA', row_name: 'GA2', status: 'active', barcode_code: '8192048102942102' },
+  { id: 103, event_id: 1, user_id: DEFAULT_USER_ID, seat_label: 'GA3', seat_number: 3, section: 'GA', row_name: 'GA3', status: 'active', barcode_code: '8192048102943102' },
+  { id: 104, event_id: 1, user_id: DEFAULT_USER_ID, seat_label: 'GA4', seat_number: 4, section: 'GA', row_name: 'GA4', status: 'active', barcode_code: '8192048102944102' },
+  // Stray kids tickets (2)
+  { id: 201, event_id: 2, user_id: DEFAULT_USER_ID, seat_label: 'SEAT 14', seat_number: 14, section: 'SEC 102', row_name: 'F', status: 'active', barcode_code: '9301294810291101' },
+  { id: 202, event_id: 2, user_id: DEFAULT_USER_ID, seat_label: 'SEAT 15', seat_number: 15, section: 'SEC 102', row_name: 'F', status: 'active', barcode_code: '9301294810291102' },
+  // Corona Capital tickets (2)
+  { id: 301, event_id: 3, user_id: DEFAULT_USER_ID, seat_label: 'GA 1', seat_number: 1, section: 'General', row_name: '0', status: 'active', barcode_code: '5819028491021101' },
+  { id: 302, event_id: 3, user_id: DEFAULT_USER_ID, seat_label: 'GA 2', seat_number: 2, section: 'General', row_name: '0', status: 'active', barcode_code: '5819028491021102' }
+];
+
+let memoryTransfers = [];
+
+// Helper to authenticate request
+function getRequestUser(req) {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const userIdHeader = req.headers['x-user-id'];
+
+  if (token) {
+    const found = memoryUsers.find(u => u.id === token || u.email === token);
+    if (found) return found;
+  }
+  if (userIdHeader) {
+    const found = memoryUsers.find(u => u.id === userIdHeader);
+    if (found) return found;
+  }
+  // Default fallback user so app always functions smoothly
+  return memoryUsers[0];
+}
 
 // ----------------------------------------------------------------
 // Dynamic Server-Side Injection for iOS Home Screen & Favicon
 // ----------------------------------------------------------------
 app.get(['/', '/index.html'], async (req, res, next) => {
   try {
-    let faviconUrl = memoryEvent.favicon_url;
-    try {
-      const { data } = await supabase.from('events').select('favicon_url').eq('id', 1).single();
-      if (data && data.favicon_url) faviconUrl = data.favicon_url;
-    } catch (e) {}
+    const user = getRequestUser(req);
+    const activeEvent = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
+    const faviconUrl = activeEvent?.favicon_url || '';
 
     const htmlPath = path.join(__dirname, 'public', 'index.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
@@ -40,15 +182,11 @@ app.get(['/', '/index.html'], async (req, res, next) => {
   }
 });
 
-// Dynamic Web App Manifest for Android & Chrome Home Screen
+// Dynamic Web App Manifest
 app.get('/manifest.json', async (req, res) => {
-  let faviconUrl = memoryEvent.favicon_url;
-  try {
-    const { data } = await supabase.from('events').select('favicon_url').eq('id', 1).single();
-    if (data && data.favicon_url) faviconUrl = data.favicon_url;
-  } catch (e) {}
-
-  const iconSrc = faviconUrl || '/assets/apple-touch-icon.png';
+  const user = getRequestUser(req);
+  const activeEvent = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
+  const iconSrc = activeEvent?.favicon_url || '/assets/apple-touch-icon.png';
   res.json({
     name: 'Ticketmaster - My Tickets',
     short_name: 'My Tickets',
@@ -56,8 +194,8 @@ app.get('/manifest.json', async (req, res) => {
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#121212',
-    theme_color: '#121212',
+    background_color: '#0b0c0e',
+    theme_color: '#0b0c0e',
     icons: [
       { src: iconSrc, sizes: '180x180', type: 'image/png', purpose: 'any' },
       { src: iconSrc, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
@@ -69,419 +207,410 @@ app.get('/manifest.json', async (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ----------------------------------------------------------------
-// Fallback in-memory store in case Supabase tables are not yet created
+// Authentication API
 // ----------------------------------------------------------------
-let memoryEvent = {
-  id: 1,
-  artist_name: 'Conan Gray',
-  tour_name: 'Superache Tour',
-  badge_text: 'Verified Fan Onsale',
-  section: 'Floor',
-  row_name: '0',
-  seat_type: 'General Admission',
-  venue_name: 'Arrow',
-  venue_city: 'Allentown, PA',
-  event_date: 'Sat, Aug 15, 7:00 PM',
-  countdown_target: new Date(Date.now() + (3 * 86400 + 5 * 3600 + 48 * 60 + 31) * 1000).toISOString(),
-  ticket_price: 89.50,
-  service_fee: 18.25,
-  order_number: '28-49201/PHL',
-  artist_image: '/assets/conan_banner.jpg',
-  map_image: '/assets/venue_map_crop.png',
-  favicon_url: '',
-  ticket_count: 4,
-  updated_at: new Date().toISOString()
-};
-
-let memoryTickets = [1, 2, 3, 4].map(n => ({
-  id: n,
-  event_id: 1,
-  seat_label: 'SEAT',
-  seat_number: n,
-  section: 'Floor',
-  row_name: '0',
-  status: 'active',
-  barcode_code: `819204810294${n}102`,
-  transferred_to_name: null,
-  transferred_to_contact: null,
-  transferred_at: null,
-  transfer_note: null
-}));
-
-let memoryTransfers = [];
-let useSupabase = true;
-
-// ----------------------------------------------------------------
-// GET /api/event
-// ----------------------------------------------------------------
-app.get('/api/event', async (req, res) => {
-  if (useSupabase) {
-    try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', 1)
-        .single();
-
-      if (!error && data) {
-        return res.json(data);
-      }
-      console.warn('[Supabase] Event query fallback to memory:', error?.message);
-    } catch (e) {
-      console.warn('[Supabase] Exception:', e.message);
-    }
-  }
-  res.json(memoryEvent);
-});
-
-// ----------------------------------------------------------------
-// PUT /api/event
-// ----------------------------------------------------------------
-app.put('/api/event', async (req, res) => {
-  const allowed = [
-    'artist_name', 'tour_name', 'badge_text', 'section', 'row_name', 'seat_type',
-    'venue_name', 'venue_city', 'event_date', 'countdown_target',
-    'ticket_price', 'service_fee', 'order_number', 'artist_image', 'map_image', 'favicon_url'
-  ];
-
-  const patch = {};
-  for (const key of allowed) {
-    if (req.body[key] !== undefined) {
-      patch[key] = req.body[key];
-      memoryEvent[key] = req.body[key];
-    }
-  }
-  memoryEvent.updated_at = new Date().toISOString();
-  patch.updated_at = memoryEvent.updated_at;
-
-  // Sync memory tickets section/row
-  if (patch.section || patch.row_name) {
-    memoryTickets.forEach(t => {
-      if (patch.section) t.section = patch.section;
-      if (patch.row_name) t.row_name = patch.row_name;
-    });
+app.post('/api/auth/register', (req, res) => {
+  const { email, password, displayName, city, country } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  if (useSupabase) {
-    try {
-      if (patch.section || patch.row_name) {
-        const ticketPatch = {};
-        if (patch.section) ticketPatch.section = patch.section;
-        if (patch.row_name) ticketPatch.row_name = patch.row_name;
-        await supabase.from('tickets').update(ticketPatch).eq('event_id', 1);
-      }
-
-      const { data, error } = await supabase
-        .from('events')
-        .update(patch)
-        .eq('id', 1)
-        .select()
-        .single();
-
-      if (!error && data) {
-        return res.json({ success: true, event: data });
-      }
-    } catch (e) {
-      console.warn('[Supabase PUT] fallback:', e.message);
-    }
+  const existing = memoryUsers.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+  if (existing) {
+    return res.status(400).json({ error: 'An account with this email already exists.' });
   }
 
-  res.json({ success: true, event: memoryEvent });
-});
-
-// ----------------------------------------------------------------
-// GET /api/tickets
-// ----------------------------------------------------------------
-app.get('/api/tickets', async (req, res) => {
-  if (useSupabase) {
-    try {
-      const { data, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('event_id', 1)
-        .order('seat_number', { ascending: true });
-
-      if (!error && data && data.length > 0) {
-        return res.json(data);
-      }
-    } catch (e) {
-      console.warn('[Supabase GET tickets] fallback:', e.message);
-    }
-  }
-  res.json(memoryTickets);
-});
-
-// ----------------------------------------------------------------
-// POST /api/transfer
-// ----------------------------------------------------------------
-app.post('/api/transfer', async (req, res) => {
-  const { ticketIds, firstName, lastName, emailOrPhone, note } = req.body;
-
-  if (!ticketIds || !Array.isArray(ticketIds) || ticketIds.length === 0)
-    return res.status(400).json({ error: 'Please select at least one ticket to transfer.' });
-
-  if (!firstName || !lastName || !emailOrPhone)
-    return res.status(400).json({ error: 'First name, last name, and contact details are required.' });
-
-  const recipientFullName = `${firstName.trim()} ${lastName.trim()}`;
-  const now = new Date().toISOString();
-
-  // Update in-memory
-  const transferId = memoryTransfers.length + 1;
-  const newTransfer = {
-    id: transferId,
-    event_id: 1,
-    ticket_ids: ticketIds,
-    first_name: firstName.trim(),
-    last_name: lastName.trim(),
-    email_or_phone: emailOrPhone.trim(),
-    note: note ? note.trim() : '',
-    status: 'pending',
-    created_at: now
+  const newUser = {
+    id: 'user-' + Date.now(),
+    email: email.trim(),
+    password: password.trim(),
+    display_name: displayName ? displayName.trim() : email.split('@')[0],
+    city: city ? city.trim() : 'Los Angeles',
+    country: country ? country.trim() : 'United States',
+    days_left: 30,
+    wallet_passes: 0,
+    settings: {
+      enableAppleWallet: false,
+      useGoogleWallet: false,
+      showTransferAccepted: false,
+      acceptedByName: 'Mary Flores',
+      showBlankPage: false,
+      enableTransferFee: false,
+      transferFeeAmount: '$50.47'
+    },
+    created_at: new Date().toISOString()
   };
-  memoryTransfers.unshift(newTransfer);
 
-  memoryTickets.forEach(t => {
-    if (ticketIds.includes(t.id)) {
-      t.status = 'transfer_pending';
-      t.transferred_to_name = recipientFullName;
-      t.transferred_to_contact = emailOrPhone.trim();
-      t.transferred_at = now;
-      t.transfer_note = note ? note.trim() : '';
-    }
-  });
+  memoryUsers.push(newUser);
 
-  if (useSupabase) {
-    try {
-      await supabase.from('transfers').insert({
-        event_id: 1,
-        ticket_ids: ticketIds,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        email_or_phone: emailOrPhone.trim(),
-        note: note ? note.trim() : '',
-        status: 'pending',
-        created_at: now
-      });
+  // Seed default U2 event for this new user so their dashboard is ready immediately!
+  const defaultEvent = {
+    id: Date.now(),
+    user_id: newUser.id,
+    artist_name: 'U2: THE GREATEST SHOW ON EARTH WORLD TOUR',
+    tour_name: 'The Greatest Show on Earth World Tour',
+    event_type: 'Standard',
+    badge_text: 'Artist Presale',
+    section: 'GA',
+    row_name: '',
+    seat_type: 'General Admission',
+    venue_name: 'San Siro Stadium',
+    venue_city: 'Milano',
+    event_date: 'Mon, Jul 05, 2027 • 7:30 PM',
+    purchase_date: 'Thu, Oct 29, 2026',
+    entrance_details: 'Gate 4 Entrance',
+    countdown_target: new Date('2027-07-05T19:30:00Z').toISOString(),
+    days_until: 221,
+    ticket_price: 145.00,
+    service_fee: 24.50,
+    order_number: '5-85630/UT5',
+    artist_image: '/assets/u2_banner.png',
+    map_image: '/assets/venue_map_crop.png',
+    favicon_url: '',
+    ticket_count: 4,
+    is_hidden: false,
+    updated_at: new Date().toISOString()
+  };
+  memoryEvents.push(defaultEvent);
 
-      await supabase.from('tickets').update({
-        status: 'transfer_pending',
-        transferred_to_name: recipientFullName,
-        transferred_to_contact: emailOrPhone.trim(),
-        transferred_at: now,
-        transfer_note: note ? note.trim() : ''
-      }).in('id', ticketIds);
-    } catch (e) {
-      console.warn('[Supabase POST transfer] fallback:', e.message);
-    }
+  for (let i = 1; i <= 4; i++) {
+    memoryTickets.push({
+      id: Date.now() + i,
+      event_id: defaultEvent.id,
+      user_id: newUser.id,
+      seat_label: `GA${i}`,
+      seat_number: i,
+      section: 'GA',
+      row_name: `GA${i}`,
+      status: 'active',
+      barcode_code: `819204810294${i}102`
+    });
   }
 
   res.json({
     success: true,
-    transferId,
-    recipient: recipientFullName,
-    emailOrPhone: emailOrPhone.trim(),
-    note: note ? note.trim() : '',
-    transferredCount: ticketIds.length,
-    transferredAt: now
+    token: newUser.id,
+    user: {
+      id: newUser.id,
+      email: newUser.email,
+      display_name: newUser.display_name,
+      city: newUser.city,
+      country: newUser.country,
+      days_left: newUser.days_left,
+      wallet_passes: newUser.wallet_passes,
+      settings: newUser.settings
+    }
   });
 });
 
-// ----------------------------------------------------------------
-// POST /api/transfer/cancel
-// ----------------------------------------------------------------
-app.post('/api/transfer/cancel', async (req, res) => {
-  const { ticketId, transferId } = req.body;
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
 
-  const resetTicket = (t) => {
-    t.status = 'active';
-    t.transferred_to_name = null;
-    t.transferred_to_contact = null;
-    t.transferred_at = null;
-    t.transfer_note = null;
+  const user = memoryUsers.find(
+    u => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password.trim()
+  );
+
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+
+  res.json({
+    success: true,
+    token: user.id,
+    user: {
+      id: user.id,
+      email: user.email,
+      display_name: user.display_name,
+      city: user.city,
+      country: user.country,
+      days_left: user.days_left,
+      wallet_passes: user.wallet_passes,
+      settings: user.settings
+    }
+  });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const user = getRequestUser(req);
+  res.json({
+    id: user.id,
+    email: user.email,
+    display_name: user.display_name,
+    city: user.city,
+    country: user.country,
+    days_left: user.days_left,
+    wallet_passes: user.wallet_passes,
+    settings: user.settings
+  });
+});
+
+// Update Profile & Location
+app.put('/api/user/profile', (req, res) => {
+  const user = getRequestUser(req);
+  const { display_name, email, city, country } = req.body;
+
+  if (display_name !== undefined) user.display_name = display_name.trim();
+  if (email !== undefined) user.email = email.trim();
+  if (city !== undefined) user.city = city.trim();
+  if (country !== undefined) user.country = country.trim();
+
+  res.json({ success: true, user });
+});
+
+// Update Settings
+app.put('/api/user/settings', (req, res) => {
+  const user = getRequestUser(req);
+  user.settings = {
+    ...user.settings,
+    ...req.body
+  };
+  res.json({ success: true, settings: user.settings });
+});
+
+// Flutterwave pass credit purchase
+app.post('/api/user/buy-passes', (req, res) => {
+  const user = getRequestUser(req);
+  const qty = parseInt(req.body.quantity, 10) || 2;
+  user.wallet_passes = (user.wallet_passes || 0) + qty;
+  res.json({ success: true, wallet_passes: user.wallet_passes, added: qty });
+});
+
+// ----------------------------------------------------------------
+// Events API (Scoped per User)
+// ----------------------------------------------------------------
+app.get('/api/events', (req, res) => {
+  const user = getRequestUser(req);
+  const userEvents = memoryEvents.filter(e => e.user_id === user.id);
+  res.json(userEvents.length ? userEvents : memoryEvents);
+});
+
+app.get('/api/events/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const event = memoryEvents.find(e => e.id === id);
+  if (!event) return res.status(404).json({ error: 'Event not found.' });
+
+  const tickets = memoryTickets.filter(t => t.event_id === id);
+  res.json({ ...event, tickets });
+});
+
+app.post('/api/events', (req, res) => {
+  const user = getRequestUser(req);
+  const {
+    artist_name, tour_name, event_type, badge_text, section, row_name,
+    venue_name, venue_city, event_date, purchase_date, entrance_details,
+    artist_image, ticket_count, ticket_price
+  } = req.body;
+
+  if (!artist_name || !venue_name) {
+    return res.status(400).json({ error: 'Event name and venue are required.' });
+  }
+
+  const newId = Date.now();
+  const count = parseInt(ticket_count, 10) || 4;
+  const newEvent = {
+    id: newId,
+    user_id: user.id,
+    artist_name: artist_name.trim(),
+    tour_name: tour_name ? tour_name.trim() : artist_name.trim(),
+    event_type: event_type || 'Standard',
+    badge_text: badge_text || 'Artist Presale',
+    section: section || 'GA',
+    row_name: row_name || '',
+    seat_type: 'General Admission',
+    venue_name: venue_name.trim(),
+    venue_city: venue_city ? venue_city.trim() : user.city,
+    event_date: event_date || 'Sat, Dec 12, 2026 • 8:00 PM',
+    purchase_date: purchase_date || new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+    entrance_details: entrance_details || 'Gate 1',
+    countdown_target: new Date(Date.now() + 14 * 86400000).toISOString(),
+    days_until: 14,
+    ticket_price: parseFloat(ticket_price) || 89.50,
+    service_fee: 18.25,
+    order_number: `5-${Math.floor(10000 + Math.random() * 90000)}/UT5`,
+    artist_image: artist_image || '/assets/u2_banner.png',
+    map_image: '/assets/venue_map_crop.png',
+    favicon_url: '',
+    ticket_count: count,
+    is_hidden: false,
+    updated_at: new Date().toISOString()
   };
 
-  if (ticketId) {
-    const t = memoryTickets.find(x => x.id === ticketId);
-    if (t) resetTicket(t);
+  memoryEvents.unshift(newEvent);
 
-    if (useSupabase) {
-      try {
-        await supabase.from('tickets').update({
-          status: 'active',
-          transferred_to_name: null,
-          transferred_to_contact: null,
-          transferred_at: null,
-          transfer_note: null
-        }).eq('id', ticketId);
-      } catch (e) {}
-    }
-    return res.json({ success: true, message: 'Transfer cancelled for ticket.' });
+  // Generate ticket seats
+  for (let i = 1; i <= count; i++) {
+    memoryTickets.push({
+      id: Date.now() + i,
+      event_id: newId,
+      user_id: user.id,
+      seat_label: `${newEvent.section}${i}`,
+      seat_number: i,
+      section: newEvent.section,
+      row_name: newEvent.row_name || `${newEvent.section}${i}`,
+      status: 'active',
+      barcode_code: `819204810294${i}102`
+    });
   }
 
-  if (transferId) {
-    const tr = memoryTransfers.find(x => x.id === transferId);
-    if (tr) {
-      tr.status = 'cancelled';
-      const ids = tr.ticket_ids || [];
-      memoryTickets.forEach(t => {
-        if (ids.includes(t.id)) resetTicket(t);
-      });
-    }
-
-    if (useSupabase) {
-      try {
-        const { data } = await supabase.from('transfers').select('ticket_ids').eq('id', transferId).single();
-        if (data && data.ticket_ids) {
-          await supabase.from('tickets').update({
-            status: 'active',
-            transferred_to_name: null,
-            transferred_to_contact: null,
-            transferred_at: null,
-            transfer_note: null
-          }).in('id', data.ticket_ids);
-        }
-        await supabase.from('transfers').update({ status: 'cancelled' }).eq('id', transferId);
-      } catch (e) {}
-    }
-    return res.json({ success: true, message: 'Transfer cancelled successfully.' });
-  }
-
-  res.status(400).json({ error: 'ticketId or transferId required' });
+  res.json({ success: true, event: newEvent });
 });
 
-// ----------------------------------------------------------------
-// POST /api/reset
-// ----------------------------------------------------------------
-app.post('/api/reset', async (req, res) => {
-  memoryTickets.forEach(t => {
-    t.status = 'active';
-    t.transferred_to_name = null;
-    t.transferred_to_contact = null;
-    t.transferred_at = null;
-    t.transfer_note = null;
+app.put('/api/events/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const event = memoryEvents.find(e => e.id === id);
+  if (!event) return res.status(404).json({ error: 'Event not found.' });
+
+  const fields = [
+    'artist_name', 'tour_name', 'event_type', 'badge_text', 'section', 'row_name',
+    'venue_name', 'venue_city', 'event_date', 'purchase_date', 'entrance_details',
+    'ticket_price', 'artist_image', 'favicon_url'
+  ];
+
+  fields.forEach(f => {
+    if (req.body[f] !== undefined) event[f] = req.body[f];
   });
-  memoryTransfers = [];
+  event.updated_at = new Date().toISOString();
 
-  if (useSupabase) {
-    try {
-      await supabase.from('tickets').update({
-        status: 'active',
-        transferred_to_name: null,
-        transferred_to_contact: null,
-        transferred_at: null,
-        transfer_note: null
-      }).eq('event_id', 1);
-
-      await supabase.from('transfers').delete().eq('event_id', 1);
-    } catch (e) {}
+  // If section changed, update ticket seats
+  if (req.body.section) {
+    memoryTickets.filter(t => t.event_id === id).forEach(t => {
+      t.section = req.body.section;
+    });
   }
 
-  res.json({ success: true, message: 'All tickets reset to original active state.' });
+  res.json({ success: true, event });
+});
+
+app.delete('/api/events/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  memoryEvents = memoryEvents.filter(e => e.id !== id);
+  memoryTickets = memoryTickets.filter(t => t.event_id !== id);
+  res.json({ success: true, message: 'Event deleted successfully.' });
+});
+
+app.post('/api/events/:id/toggle-visibility', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const event = memoryEvents.find(e => e.id === id);
+  if (!event) return res.status(404).json({ error: 'Event not found.' });
+
+  event.is_hidden = !event.is_hidden;
+  res.json({ success: true, is_hidden: event.is_hidden });
 });
 
 // ----------------------------------------------------------------
-// POST /api/tickets/update-count
+// Tickets & Transfer API
 // ----------------------------------------------------------------
-app.post('/api/tickets/update-count', async (req, res) => {
-  const count = parseInt(req.body.count, 10);
-  if (!count || count < 1 || count > 20)
-    return res.status(400).json({ error: 'Ticket count must be between 1 and 20.' });
+app.get('/api/events/:id/tickets', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const tickets = memoryTickets.filter(t => t.event_id === id);
+  res.json(tickets);
+});
 
-  memoryEvent.ticket_count = count;
-  memoryTickets = Array.from({ length: count }, (_, i) => ({
-    id: i + 1,
-    event_id: 1,
-    seat_label: 'SEAT',
-    seat_number: i + 1,
-    section: memoryEvent.section || 'Floor',
-    row_name: memoryEvent.row_name || '0',
-    status: 'active',
-    barcode_code: `819204810294${i + 1}102`,
-    transferred_to_name: null,
-    transferred_to_contact: null,
-    transferred_at: null,
-    transfer_note: null
-  }));
+app.post('/api/events/:id/transfer', (req, res) => {
+  const user = getRequestUser(req);
+  const eventId = parseInt(req.params.id, 10);
+  const { ticketIds, firstName, lastName, emailOrPhone, note } = req.body;
 
-  if (useSupabase) {
-    try {
-      await supabase.from('tickets').delete().eq('event_id', 1);
-      const rows = memoryTickets.map(t => ({
-        event_id: 1,
-        seat_label: t.seat_label,
-        seat_number: t.seat_number,
-        section: t.section,
-        row_name: t.row_name,
-        status: t.status,
-        barcode_code: t.barcode_code
-      }));
-      await supabase.from('tickets').insert(rows);
-      await supabase.from('events').update({ ticket_count: count }).eq('id', 1);
-    } catch (e) {}
+  if (!ticketIds || !Array.isArray(ticketIds) || ticketIds.length === 0) {
+    return res.status(400).json({ error: 'Please select at least one ticket.' });
   }
 
-  res.json({ success: true, ticketCount: count, tickets: memoryTickets });
+  const recipientName = `${(firstName || '').trim()} ${(lastName || '').trim()}`.trim();
+  const contact = (emailOrPhone || '').trim();
+  const now = new Date().toISOString();
+
+  const transferRecord = {
+    id: Date.now(),
+    user_id: user.id,
+    event_id: eventId,
+    ticket_ids: ticketIds,
+    first_name: firstName,
+    last_name: lastName,
+    recipient_name: recipientName,
+    email_or_phone: contact,
+    note: note || '',
+    status: 'completed',
+    created_at: now
+  };
+  memoryTransfers.unshift(transferRecord);
+
+  // Update tickets
+  memoryTickets.forEach(t => {
+    if (ticketIds.includes(t.id)) {
+      t.status = 'transferred';
+      t.transferred_to_name = recipientName;
+      t.transferred_to_contact = contact;
+      t.transferred_at = now;
+      t.transfer_note = note || '';
+    }
+  });
+
+  res.json({
+    success: true,
+    transfer: transferRecord,
+    transferredCount: ticketIds.length
+  });
+});
+
+app.get('/api/transfers', (req, res) => {
+  const user = getRequestUser(req);
+  const list = memoryTransfers.filter(t => t.user_id === user.id);
+  res.json(list);
+});
+
+// Confirmation Email mockup
+app.post('/api/send-confirmation-email', (req, res) => {
+  const { eventId, recipientEmail } = req.body;
+  if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required.' });
+
+  res.json({
+    success: true,
+    message: `Confirmation email sent successfully to ${recipientEmail}!`
+  });
+});
+
+// Legacy single-event compatibility endpoints
+app.get('/api/event', (req, res) => {
+  const user = getRequestUser(req);
+  const ev = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
+  res.json(ev);
+});
+
+app.put('/api/event', (req, res) => {
+  const user = getRequestUser(req);
+  const ev = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
+  Object.assign(ev, req.body, { updated_at: new Date().toISOString() });
+  res.json({ success: true, event: ev });
+});
+
+app.get('/api/tickets', (req, res) => {
+  const user = getRequestUser(req);
+  const ev = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
+  const tix = memoryTickets.filter(t => t.event_id === ev.id);
+  res.json(tix);
+});
+
+app.post('/api/transfer', (req, res) => {
+  const user = getRequestUser(req);
+  const ev = memoryEvents.find(e => e.user_id === user.id) || memoryEvents[0];
+  req.params.id = ev.id;
+  return app._router.handle(req, res);
 });
 
 // ----------------------------------------------------------------
-// GET /api/transfers
-// ----------------------------------------------------------------
-app.get('/api/transfers', async (req, res) => {
-  if (useSupabase) {
-    try {
-      const { data, error } = await supabase
-        .from('transfers')
-        .select('*')
-        .eq('event_id', 1)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        return res.json(data);
-      }
-    } catch (e) {}
-  }
-  res.json(memoryTransfers);
-});
-
-// ----------------------------------------------------------------
-// POST /api/favicon  —  Save custom favicon data URL
-// ----------------------------------------------------------------
-app.post('/api/favicon', async (req, res) => {
-  const { faviconUrl } = req.body;
-  memoryEvent.favicon_url = faviconUrl || '';
-
-  if (useSupabase) {
-    try {
-      await supabase
-        .from('events')
-        .update({ favicon_url: faviconUrl || '', updated_at: new Date().toISOString() })
-        .eq('id', 1);
-    } catch (e) {}
-  }
-
-  res.json({ success: true, faviconUrl: memoryEvent.favicon_url });
-});
-
-// ----------------------------------------------------------------
-// Server boot — verify Supabase connection
+// Server Boot
 // ----------------------------------------------------------------
 async function init() {
   try {
     const { data, error } = await supabase.from('events').select('id').limit(1);
-    if (error) {
-      console.log('[Supabase] Note: Supabase tables not found yet. The app is running smoothly using memory store.');
-      console.log('[Supabase] To persist directly in Supabase, run supabase_schema.sql in your Supabase SQL editor.');
-    } else {
-      console.log('[Supabase] Connected to live Supabase database.');
-    }
-  } catch (err) {
-    console.log('[Supabase] Offline/Memory mode active.');
-  }
+    if (!error) console.log('[Supabase] Connected to live Supabase database.');
+  } catch (err) {}
 
   app.listen(PORT, () => {
-    console.log(`\n🎟️  Ticket Transfer App running at http://localhost:${PORT}`);
-    console.log(`⚙️   Admin panel: http://localhost:${PORT}/admin.html\n`);
+    console.log(`\n🎟️ Ticketmaster App running at http://localhost:${PORT}\n`);
   });
 }
 
