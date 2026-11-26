@@ -344,12 +344,6 @@ function switchMainTab(viewId) {
   const activeBtn = document.getElementById(btnMap[viewId]);
   if (activeBtn) activeBtn.classList.add('active');
 
-  // Control floating near-you pill visibility: ONLY on viewHome
-  const nearPill = document.querySelector('.floating-near-you-pill');
-  if (nearPill) {
-    nearPill.style.display = (viewId === 'viewHome') ? 'flex' : 'none';
-  }
-
   if (viewId === 'viewWatchlist') {
     const hasCustomAccount = localStorage.getItem('tm_has_account') === 'true' || localStorage.getItem('tm_user') || (currentUser && currentUser.id && currentUser.id !== 'default-user');
     if (!hasCustomAccount) {
@@ -398,10 +392,20 @@ function switchEventsTab(tab) {
   }
 }
 
+let editingEventId = null;
+
 // ----------------------------------------------------------------
 // Manage Subviews (Create Event, Manage Events, Profile, Settings)
 // ----------------------------------------------------------------
 function openManageSubView(name) {
+  if (name === 'createEvent' && !editingEventId) {
+    const titleEl = document.querySelector('#subViewCreateEvent .subview-title');
+    if (titleEl) titleEl.textContent = 'Create Event';
+    const saveBtn = document.querySelector('#subViewCreateEvent .primary-black-btn');
+    if (saveBtn) saveBtn.textContent = 'Create Event';
+    if (document.getElementById('ceName')) document.getElementById('ceName').value = '';
+    if (document.getElementById('ceVenue')) document.getElementById('ceVenue').value = '';
+  }
   const map = {
     'createEvent': 'subViewCreateEvent',
     'manageEvents': 'subViewManageEvents',
@@ -413,6 +417,13 @@ function openManageSubView(name) {
 }
 
 function closeManageSubView(name) {
+  if (name === 'createEvent') {
+    editingEventId = null;
+    const titleEl = document.querySelector('#subViewCreateEvent .subview-title');
+    if (titleEl) titleEl.textContent = 'Create Event';
+    const saveBtn = document.querySelector('#subViewCreateEvent .primary-black-btn');
+    if (saveBtn) saveBtn.textContent = 'Create Event';
+  }
   const map = {
     'createEvent': 'subViewCreateEvent',
     'manageEvents': 'subViewManageEvents',
@@ -815,7 +826,7 @@ async function completeTransferProcess(firstName, lastName, contact, note) {
   const finishBtn = document.getElementById('finishTransferBtn');
   if (finishBtn) {
     finishBtn.disabled = true;
-    finishBtn.textContent = 'Sending Transfer & Email...';
+    finishBtn.textContent = 'Sending...';
   }
 
   const result = await apiCall(`/api/events/${activeEvent.id}/transfer`, 'POST', {
@@ -834,45 +845,7 @@ async function completeTransferProcess(firstName, lastName, contact, note) {
   closeTransferDrawers();
 
   if (result && result.success) {
-    // Populate Transfer Success Modal
-    const modal = document.getElementById('transferSuccessModal');
-    const recipInfo = document.getElementById('tsmRecipientInfo');
-    const statusBox = document.getElementById('tsmGmailStatusBox');
-    const claimInput = document.getElementById('tsmClaimLinkInput');
-    const openClaimBtn = document.getElementById('tsmOpenClaimBtn');
-
-    if (recipInfo) {
-      recipInfo.textContent = `Sent to ${firstName} ${lastName} (${contact}) • ${selectedTransferTicketIds.length} ticket(s)`;
-    }
-
-    if (claimInput) claimInput.value = result.claimUrl || '';
-    if (openClaimBtn) openClaimBtn.href = result.claimUrl || '#';
-
-    if (statusBox) {
-      if (result.emailResult && result.emailResult.deliveredViaGmail) {
-        statusBox.innerHTML = `
-          <div style="font-weight:700; color:#16a34a; margin-bottom:4px;">✉️ Gmail Delivery Successful</div>
-          <div>Ticketmaster transfer invitation email sent directly to <strong>${contact}</strong> via Gmail!</div>
-        `;
-      } else if (result.emailResult && result.emailResult.reason === 'GMAIL_CONFIG_MISSING') {
-        statusBox.innerHTML = `
-          <div style="font-weight:700; color:#026cdf; margin-bottom:4px;">ℹ️ Live Gmail Ready for Configuration</div>
-          <div>Gmail credentials are not configured yet in settings. The email was prepared and the instant authorization link is ready below.</div>
-        `;
-      } else if (result.emailResult && result.emailResult.error) {
-        statusBox.innerHTML = `
-          <div style="font-weight:700; color:#f59e0b; margin-bottom:4px;">⚠️ Gmail Notice</div>
-          <div>${result.emailResult.message || 'Gmail SMTP failed. You can share the claim link below directly.'}</div>
-        `;
-      } else {
-        statusBox.innerHTML = `
-          <div style="font-weight:700; color:#16a34a; margin-bottom:4px;">✓ Transfer Created</div>
-          <div>Share the authorization link below with the recipient to accept tickets.</div>
-        `;
-      }
-    }
-
-    if (modal) modal.classList.add('open');
+    alert(`✓ Transfer sent to ${firstName} ${lastName} (${contact})!`);
   } else {
     alert('Failed to process transfer. Please try again.');
   }
@@ -1101,6 +1074,32 @@ async function saveNewEvent() {
     weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
   }) : 'Thu, Oct 29, 2026';
 
+  if (editingEventId) {
+    const res = await apiCall(`/api/events/${editingEventId}`, 'PUT', {
+      artist_name: name,
+      tour_name: name,
+      badge_text: presaleLabel,
+      venue_name: venue.split('-')[0].trim(),
+      venue_city: venue.split('-')[1]?.trim() || currentUser.city,
+      event_date: formattedDate,
+      purchase_date: formattedPurchDate,
+      entrance_details: entrance || 'Gate 1 Entrance',
+      ticket_price: price,
+      service_fee: fee,
+      order_number: orderNumber,
+      section: firstSec,
+      row_name: firstRow,
+      ticket_count: count,
+      artist_image: newPosterBase64 || undefined
+    });
+    editingEventId = null;
+    alert('✓ Event updated successfully!');
+    closeManageSubView('createEvent');
+    await loadUserEvents();
+    renderAllViews();
+    return;
+  }
+
   const res = await apiCall('/api/events', 'POST', {
     artist_name: name,
     tour_name: name,
@@ -1155,11 +1154,22 @@ async function deleteEvent(id) {
 function editEvent(id) {
   const ev = userEvents.find(e => e.id === id);
   if (!ev) return;
+  editingEventId = id;
   openManageSubView('createEvent');
-  document.getElementById('ceName').value = ev.artist_name;
-  document.getElementById('ceVenue').value = `${ev.venue_name} - ${ev.venue_city || ''}`;
-  document.getElementById('ceEntrance').value = ev.entrance_details || '';
-  document.getElementById('ceSection').value = ev.section || 'GA';
+
+  const titleEl = document.querySelector('#subViewCreateEvent .subview-title');
+  if (titleEl) titleEl.textContent = 'Edit Event';
+  const saveBtn = document.querySelector('#subViewCreateEvent .primary-black-btn');
+  if (saveBtn) saveBtn.textContent = 'Save Changes';
+
+  if (document.getElementById('ceName')) document.getElementById('ceName').value = ev.artist_name || '';
+  if (document.getElementById('ceVenue')) document.getElementById('ceVenue').value = `${ev.venue_name || ''} - ${ev.venue_city || ''}`;
+  if (document.getElementById('ceEntrance')) document.getElementById('ceEntrance').value = ev.entrance_details || '';
+  if (document.getElementById('ceSection')) document.getElementById('ceSection').value = ev.section || 'GA';
+  if (document.getElementById('cePrice')) document.getElementById('cePrice').value = ev.ticket_price || '';
+  if (document.getElementById('ceFee')) document.getElementById('ceFee').value = ev.service_fee || '';
+  if (document.getElementById('ceOrderNumber')) document.getElementById('ceOrderNumber').value = ev.order_number || '';
+  if (document.getElementById('cePresaleLabel')) document.getElementById('cePresaleLabel').value = ev.badge_text || 'General Sale';
 }
 
 // ----------------------------------------------------------------
