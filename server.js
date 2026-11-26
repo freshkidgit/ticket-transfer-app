@@ -622,6 +622,74 @@ app.get('/api/auth/me', async (req, res) => {
   });
 });
 
+// Delete own account
+app.delete('/api/auth/account', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
+  if (!user || user.id === DEFAULT_USER_ID) {
+    return res.status(401).json({ error: 'Not authenticated.' });
+  }
+
+  const uid = user.id;
+  memoryUsers = memoryUsers.filter(u => u.id !== uid);
+  memoryEvents = memoryEvents.filter(e => e.user_id !== uid);
+  memoryTickets = memoryTickets.filter(t => t.user_id !== uid);
+  memoryTransfers = memoryTransfers.filter(tr => tr.user_id !== uid);
+  saveStore();
+
+  try {
+    await supabase.from('app_users').delete().eq('id', uid);
+  } catch (e) {}
+
+  res.json({ success: true, message: 'Account deleted permanently.' });
+});
+
+// Admin: list & delete registered accounts
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const { data: sbUsers } = await supabase.from('app_users').select('id, email, display_name, city, country, created_at, settings');
+    if (Array.isArray(sbUsers)) {
+      sbUsers.forEach(u => {
+        if (u.id === DEFAULT_USER_ID || (u.email && u.email.toLowerCase().includes('toom4117'))) return;
+        if (!memoryUsers.find(mu => mu.id === u.id)) {
+          memoryUsers.push(u);
+          hydrateUserFromSupabase(u);
+        }
+      });
+    }
+  } catch (e) {}
+
+  const list = memoryUsers
+    .filter(u => u.id !== DEFAULT_USER_ID && !(u.email && u.email.toLowerCase().includes('toom4117')))
+    .map(u => ({
+      id: u.id,
+      email: u.email,
+      display_name: u.display_name,
+      city: u.city || '',
+      country: u.country || '',
+      event_count: memoryEvents.filter(e => e.user_id === u.id).length,
+      created_at: u.created_at
+    }));
+  res.json(list);
+});
+
+app.delete('/api/admin/users/:id', async (req, res) => {
+  const uid = req.params.id;
+  if (!uid || uid === DEFAULT_USER_ID) {
+    return res.status(400).json({ error: 'Cannot delete default seed.' });
+  }
+  memoryUsers = memoryUsers.filter(u => u.id !== uid);
+  memoryEvents = memoryEvents.filter(e => e.user_id !== uid);
+  memoryTickets = memoryTickets.filter(t => t.user_id !== uid);
+  memoryTransfers = memoryTransfers.filter(tr => tr.user_id !== uid);
+  saveStore();
+
+  try {
+    await supabase.from('app_users').delete().eq('id', uid);
+  } catch (e) {}
+
+  res.json({ success: true, message: 'User account deleted.' });
+});
+
 // Update Profile & Location
 app.put('/api/user/profile', async (req, res) => {
   const user = await resolveRequestUser(req, false);

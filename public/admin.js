@@ -143,6 +143,7 @@ async function loadAdminData() {
     renderTransfersTable(transfers);
     applyCurrentFavicon(currentEvent);
     loadGmailSettings();
+    loadAdminUsers();
   } catch (err) {
     console.error('Error loading admin data:', err);
   }
@@ -609,5 +610,50 @@ async function sendAdminTestEmail() {
     }
   } catch (err) {
     notice.innerHTML = `<span style="color:#ef4444;">❌ Network error: ${err.message}</span>`;
+  }
+}
+
+// ================================================================
+// REGISTERED ACCOUNTS MANAGEMENT
+// ================================================================
+async function loadAdminUsers() {
+  const tbody = document.getElementById('adminUsersTableBody');
+  if (!tbody) return;
+  try {
+    const res = await fetch('/api/admin/users');
+    const users = await res.json();
+    if (!Array.isArray(users) || users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No registered user accounts yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td style="font-weight:600;">${u.display_name || '-'}</td>
+        <td>${u.email}</td>
+        <td>${[u.city, u.country].filter(Boolean).join(', ') || '-'}</td>
+        <td>${u.event_count || 0}</td>
+        <td>
+          <button onclick="deleteAdminUser('${u.id}', '${(u.email || '').replace(/'/g, "\\'")}')" style="background:#7f1d1d; color:#fecaca; border:1px solid #ef4444; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Error loading users:', err);
+  }
+}
+
+async function deleteAdminUser(uid, email) {
+  if (!confirm(`Permanently delete account "${email}" and all its events/tickets?`)) return;
+  try {
+    const res = await fetch(`/api/admin/users/${encodeURIComponent(uid)}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showAlert(`Deleted account ${email}`);
+      loadAdminUsers();
+    } else {
+      alert(data.error || 'Failed to delete user.');
+    }
+  } catch (err) {
+    alert('Error deleting user: ' + err.message);
   }
 }

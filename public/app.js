@@ -1405,40 +1405,62 @@ async function handleRegisterSubmit(e) {
   }
 }
 
+function resetToGuestState() {
+  localStorage.removeItem('tm_user');
+  localStorage.removeItem('tm_has_account');
+  currentUser = {
+    id: null,
+    email: '',
+    display_name: 'Guest',
+    city: 'Los Angeles',
+    country: 'United States',
+    days_left: 22,
+    wallet_passes: 0,
+    settings: {
+      appLayout: 'american',
+      language: 'en',
+      paymentMethod: 'ngn',
+      enableAppleWallet: false,
+      useGoogleWallet: false,
+      showTransferAccepted: false,
+      acceptedByName: 'Mary Flores',
+      showBlankPage: false,
+      showLayout2Countdown: false,
+      enableTransferFee: false,
+      transferFeeAmount: '$50.47'
+    }
+  };
+  userEvents = [];
+  activeEvent = null;
+  activeTickets = [];
+  renderAllViews();
+  checkWatchlistAuth();
+  applyAppLanguage('en');
+}
+
 function handleLogout() {
   if (confirm('Are you sure you want to sign out?')) {
-    localStorage.removeItem('tm_user');
-    localStorage.removeItem('tm_has_account');
-    currentUser = {
-      id: null,
-      email: '',
-      display_name: 'Guest',
-      city: 'Los Angeles',
-      country: 'United States',
-      days_left: 22,
-      wallet_passes: 0,
-      settings: {
-        appLayout: 'american',
-        language: 'en',
-        paymentMethod: 'ngn',
-        enableAppleWallet: false,
-        useGoogleWallet: false,
-        showTransferAccepted: false,
-        acceptedByName: 'Mary Flores',
-        showBlankPage: false,
-        showLayout2Countdown: false,
-        enableTransferFee: false,
-        transferFeeAmount: '$50.47'
-      }
-    };
-    userEvents = [];
-    activeEvent = null;
-    activeTickets = [];
-    renderAllViews();
-    checkWatchlistAuth();
-    // Apply English after logout
-    applyAppLanguage('en');
+    resetToGuestState();
     openAuthModal('login');
+  }
+}
+
+async function handleDeleteAccount() {
+  if (!currentUser || !currentUser.id) {
+    alert('You are not signed in to an account.');
+    return;
+  }
+  const confirmed = confirm(`Are you sure you want to permanently delete "${currentUser.email}"? All your events and tickets will be removed and this cannot be undone.`);
+  if (!confirmed) return;
+
+  const res = await apiCall('/api/auth/account', 'DELETE');
+  if (res && res.success) {
+    closeManageSubView('profileLocation');
+    resetToGuestState();
+    alert('✓ Your account has been permanently deleted.');
+    openAuthModal('register');
+  } else {
+    alert(res?.error || 'Failed to delete account.');
   }
 }
 
@@ -1555,6 +1577,11 @@ function renderAccountTab() {
   if (nameEl) nameEl.textContent = name;
   const emailEl = document.getElementById('accTabEmail');
   if (emailEl) emailEl.textContent = email;
+
+  const delBtn = document.getElementById('deleteAccountBtn');
+  if (delBtn) {
+    delBtn.style.display = (currentUser && currentUser.id && currentUser.id !== DEFAULT_USER_ID_CLIENT) ? 'block' : 'none';
+  }
 }
 
 // Also keep rendering the Watchlist (dashboard) profile card

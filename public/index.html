@@ -590,6 +590,7 @@
 
         <div class="tma-signout-wrap">
           <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+          <button id="deleteAccountBtn" onclick="handleDeleteAccount()" style="display:none; width:100%; margin-top:10px; padding:12px; background:transparent; border:1px solid rgba(239,68,68,0.45); color:#f87171; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Delete Account</button>
         </div>
 
         <div style="text-align: center; padding: 14px 0 8px 0;">
@@ -1323,7 +1324,7 @@
 
           <label class="form-label" style="margin-top:12px;">Email</label>
           <div class="form-helper" style="margin-bottom:6px;">Shown on My Account. You can change this to your preferred contact email.</div>
-          <input type="email" id="plEmail" class="form-input" placeholder="toom41170@gmail.com">
+          <input type="email" id="plEmail" class="form-input" placeholder="you@example.com">
         </div>
 
         <div class="white-card" style="margin-top:14px;">
@@ -1338,6 +1339,7 @@
         </div>
 
         <button class="primary-blue-btn" style="margin-top:16px;" onclick="saveProfileAndLocation()">Save Changes</button>
+        <button onclick="handleDeleteAccount()" style="width:100%; margin-top:12px; padding:13px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Delete Account</button>
       </div>
     </div>
 
