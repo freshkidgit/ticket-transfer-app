@@ -39,13 +39,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   const storedUser = localStorage.getItem('tm_user');
   if (storedUser) {
     try {
-      currentUser = JSON.parse(storedUser);
-    } catch (e) {}
+      const parsed = JSON.parse(storedUser);
+      if (parsed && parsed.id) {
+        currentUser = parsed;
+      } else {
+        currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
+      }
+    } catch (e) {
+      currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
+    }
+  } else {
+    // New user: do NOT load default account; prompt to create account
+    currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
   }
 
-  await loadUserData();
-  await loadUserEvents();
-  renderAllViews();
+  if (currentUser && currentUser.id) {
+    await loadUserData();
+    await loadUserEvents();
+    renderAllViews();
+  } else {
+    userEvents = [];
+    renderAllViews();
+    openAuthModal('register');
+  }
 
   // If returning from accepting tickets in claim-ticket.html
   if (window.location.search.includes('accepted=true')) {
@@ -60,9 +76,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 // API helper with user ID header
 async function apiCall(endpoint, method = 'GET', body = null) {
   const headers = {
-    'Content-Type': 'application/json',
-    'x-user-id': currentUser.id
+    'Content-Type': 'application/json'
   };
+  if (currentUser && currentUser.id) {
+    headers['x-user-id'] = currentUser.id;
+  }
   const options = { method, headers };
   if (body) options.body = JSON.stringify(body);
 
@@ -87,49 +105,15 @@ async function loadUserData() {
 }
 
 async function loadUserEvents() {
+  if (!currentUser || !currentUser.id) {
+    userEvents = [];
+    return;
+  }
   const list = await apiCall('/api/events');
-  if (Array.isArray(list) && list.length > 0) {
+  if (Array.isArray(list)) {
     userEvents = list;
   } else {
-    // Fallback default
-    userEvents = [
-      {
-        id: 1,
-        artist_name: 'U2: THE GREATEST SHOW ON EARTH WORLD TOUR',
-        tour_name: 'The Greatest Show on Earth World Tour',
-        event_type: 'Standard',
-        badge_text: 'Artist Presale',
-        section: 'GA',
-        venue_name: 'San Siro Stadium',
-        venue_city: 'Milano',
-        event_date: 'Mon, Jul 05, 2027 • 7:30 PM',
-        purchase_date: 'Thu, Oct 29, 2026',
-        entrance_details: 'Gate 4 Entrance',
-        days_until: 221,
-        order_number: '5-85630/UT5',
-        artist_image: '/assets/u2_banner.jpg',
-        ticket_count: 4,
-        is_hidden: false
-      },
-      {
-        id: 2,
-        artist_name: 'STRAY KIDS WORLD TOUR [RUN IT ARNHEM]',
-        tour_name: '[RUN IT ARNHEM]',
-        event_type: 'Standard',
-        badge_text: 'VIP Package',
-        section: 'SEC 102',
-        venue_name: 'GelreDome',
-        venue_city: 'Arnhem',
-        event_date: 'Tue, Jul 27, 2027 • 7:30 PM',
-        purchase_date: 'Mon, Nov 02, 2026',
-        entrance_details: 'North Entrance',
-        days_until: 243,
-        order_number: '7-99120/SKZ',
-        artist_image: '/assets/straykids_banner.jpg',
-        ticket_count: 2,
-        is_hidden: false
-      }
-    ];
+    userEvents = [];
   }
 }
 
@@ -1384,6 +1368,9 @@ function handleLogout() {
   if (confirm('Are you sure you want to sign out?')) {
     localStorage.removeItem('tm_user');
     localStorage.removeItem('tm_has_account');
+    currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
+    userEvents = [];
+    renderAllViews();
     checkWatchlistAuth();
     openAuthModal('login');
   }

@@ -239,10 +239,51 @@ async function syncFromSupabase() {
       });
       console.log(`[Supabase] Loaded ${users.length} users from app_users.`);
     }
+
+    const { data: evs, error: eErr } = await supabase.from('events').select('*');
+    if (!eErr && Array.isArray(evs) && evs.length > 0) {
+      evs.forEach(ev => {
+        if (!memoryEvents.find(me => me.id === ev.id)) {
+          memoryEvents.push(ev);
+        }
+      });
+    }
+
+    const { data: tix, error: tErr } = await supabase.from('tickets').select('*');
+    if (!tErr && Array.isArray(tix) && tix.length > 0) {
+      tix.forEach(t => {
+        if (!memoryTickets.find(mt => mt.id === t.id)) {
+          memoryTickets.push(t);
+        }
+      });
+    }
   } catch (e) {}
 }
 
-// Helper to authenticate request
+// Helper to authenticate request (strict when x-user-id is checked)
+async function resolveRequestUser(req, allowFallback = true) {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const userIdHeader = (req.headers['x-user-id'] || '').trim();
+  const lookupId = token || userIdHeader;
+
+  if (lookupId && lookupId !== 'null' && lookupId !== 'undefined') {
+    let found = memoryUsers.find(u => u.id === lookupId || u.email === lookupId);
+    if (!found) {
+      try {
+        const { data } = await supabase.from('app_users').select('*').eq('id', lookupId).limit(1);
+        if (data && data.length > 0) {
+          found = data[0];
+          memoryUsers.push(found);
+        }
+      } catch (e) {}
+    }
+    if (found) return found;
+  }
+
+  return allowFallback ? memoryUsers[0] : null;
+}
+
 function getRequestUser(req) {
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
@@ -256,7 +297,6 @@ function getRequestUser(req) {
     const found = memoryUsers.find(u => u.id === userIdHeader);
     if (found) return found;
   }
-  // Default fallback user so app always functions smoothly
   return memoryUsers[0];
 }
 
@@ -321,13 +361,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ----------------------------------------------------------------
 // Authentication API
 // ----------------------------------------------------------------
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { email, password, displayName, city, country } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  const existing = memoryUsers.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+  let existing = memoryUsers.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+  if (!existing) {
+    try {
+      const { data: sbExisting } = await supabase
+        .from('app_users')
+        .select('id')
+        .ilike('email', email.trim())
+        .limit(1);
+      if (sbExisting && sbExisting.length > 0) existing = sbExisting[0];
+    } catch (e) {}
+  }
   if (existing) {
     return res.status(400).json({ error: 'An account with this email already exists.' });
   }
@@ -435,9 +485,10 @@ app.post('/api/auth/register', (req, res) => {
   );
 
   saveStore();
-  dbUpsertUser(newUser);
-  dbUpsertEvent(u2Event);
-  dbUpsertEvent(skzEvent);
+  await dbUpsertUser(newUser);
+  await dbUpsertEvent(u2Event);
+  await dbUpsertEvent(skzEvent);
+  await dbUpsertTickets(memoryTickets.filter(t => t.user_id === newUser.id));
 
   res.json({
     success: true,
@@ -502,8 +553,11 @@ app.post('/api/auth/login', async (req, res) => {
   });
 });
 
-app.get('/api/auth/me', (req, res) => {
-  const user = getRequestUser(req);
+app.get('/api/auth/me', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
+  if (!user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
   res.json({
     id: user.id,
     email: user.email,
@@ -517,8 +571,8 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 // Update Profile & Location
-app.put('/api/user/profile', (req, res) => {
-  const user = getRequestUser(req);
+app.put('/api/user/profile', async (req, res) => {
+  const user = await resolveRequestUser(req, true);
   const { display_name, email, city, country } = req.body;
 
   if (display_name !== undefined) user.display_name = display_name.trim();
@@ -527,19 +581,19 @@ app.put('/api/user/profile', (req, res) => {
   if (country !== undefined) user.country = country.trim();
 
   saveStore();
-  dbUpsertUser(user);
+  await dbUpsertUser(user);
   res.json({ success: true, user });
 });
 
 // Update Settings
-app.put('/api/user/settings', (req, res) => {
-  const user = getRequestUser(req);
+app.put('/api/user/settings', async (req, res) => {
+  const user = await resolveRequestUser(req, true);
   user.settings = {
     ...user.settings,
     ...req.body
   };
   saveStore();
-  dbUpsertUser(user);
+  await dbUpsertUser(user);
   res.json({ success: true, settings: user.settings });
 });
 
@@ -556,9 +610,23 @@ app.post('/api/user/buy-passes', (req, res) => {
 // ----------------------------------------------------------------
 // Events API (Scoped per User)
 // ----------------------------------------------------------------
-app.get('/api/events', (req, res) => {
-  const user = getRequestUser(req);
-  const userEvents = memoryEvents.filter(e => e.user_id === user.id);
+app.get('/api/events', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
+  if (!user) return res.json([]);
+
+  let userEvents = memoryEvents.filter(e => e.user_id === user.id);
+  if (userEvents.length === 0) {
+    try {
+      const { data: sbEvents } = await supabase.from('events').select('*').eq('user_id', user.id);
+      if (Array.isArray(sbEvents) && sbEvents.length > 0) {
+        sbEvents.forEach(ev => {
+          if (!memoryEvents.find(me => me.id === ev.id)) memoryEvents.push(ev);
+        });
+        userEvents = sbEvents;
+      }
+    } catch (e) {}
+  }
+
   if (userEvents.length > 0) {
     return res.json(userEvents);
   }
