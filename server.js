@@ -140,6 +140,108 @@ function loadStore() {
 }
 loadStore();
 
+// ----------------------------------------------------------------
+// Supabase Database Sync Helpers (Non-blocking with local fallback)
+// ----------------------------------------------------------------
+async function dbUpsertUser(u) {
+  try {
+    await supabase.from('app_users').upsert({
+      id: u.id,
+      email: u.email,
+      password: u.password,
+      display_name: u.display_name,
+      city: u.city,
+      country: u.country,
+      days_left: u.days_left || 30,
+      wallet_passes: u.wallet_passes || 0,
+      settings: u.settings || {},
+      updated_at: new Date().toISOString()
+    });
+  } catch (e) {}
+}
+
+async function dbUpsertEvent(ev) {
+  try {
+    await supabase.from('events').upsert({
+      id: ev.id,
+      user_id: ev.user_id,
+      artist_name: ev.artist_name,
+      tour_name: ev.tour_name,
+      event_type: ev.event_type,
+      badge_text: ev.badge_text,
+      section: ev.section,
+      row_name: ev.row_name,
+      seat_type: ev.seat_type,
+      venue_name: ev.venue_name,
+      venue_city: ev.venue_city,
+      event_date: ev.event_date,
+      purchase_date: ev.purchase_date,
+      entrance_details: ev.entrance_details,
+      ticket_price: ev.ticket_price,
+      service_fee: ev.service_fee,
+      order_number: ev.order_number,
+      artist_image: ev.artist_image,
+      map_image: ev.map_image,
+      favicon_url: ev.favicon_url,
+      ticket_count: ev.ticket_count,
+      is_hidden: !!ev.is_hidden,
+      updated_at: new Date().toISOString()
+    });
+  } catch (e) {}
+}
+
+async function dbUpsertTickets(tix) {
+  if (!Array.isArray(tix) || tix.length === 0) return;
+  try {
+    await supabase.from('tickets').upsert(tix.map(t => ({
+      id: t.id,
+      event_id: t.event_id,
+      user_id: t.user_id,
+      seat_label: t.seat_label,
+      seat_number: t.seat_number,
+      section: t.section,
+      row_name: t.row_name,
+      status: t.status,
+      barcode_code: t.barcode_code,
+      transferred_to_name: t.transferred_to_name || null,
+      transferred_to_contact: t.transferred_to_contact || null,
+      transferred_at: t.transferred_at || null,
+      transfer_note: t.transfer_note || null
+    })));
+  } catch (e) {}
+}
+
+async function dbSaveTransfer(tr) {
+  try {
+    await supabase.from('transfers').upsert({
+      id: tr.id,
+      event_id: tr.event_id,
+      user_id: tr.user_id,
+      ticket_ids: tr.ticket_ids,
+      first_name: tr.first_name,
+      last_name: tr.last_name,
+      email_or_phone: tr.email_or_phone,
+      note: tr.note,
+      status: tr.status,
+      created_at: tr.created_at
+    });
+  } catch (e) {}
+}
+
+async function syncFromSupabase() {
+  try {
+    const { data: users, error: uErr } = await supabase.from('app_users').select('*');
+    if (!uErr && Array.isArray(users) && users.length > 0) {
+      users.forEach(u => {
+        if (!memoryUsers.find(mu => mu.id === u.id || mu.email.toLowerCase() === u.email.toLowerCase())) {
+          memoryUsers.push(u);
+        }
+      });
+      console.log(`[Supabase] Loaded ${users.length} users from app_users.`);
+    }
+  } catch (e) {}
+}
+
 // Helper to authenticate request
 function getRequestUser(req) {
   const authHeader = req.headers['authorization'] || '';
@@ -207,6 +309,11 @@ app.get('/manifest.json', async (req, res) => {
 // Claim ticket routes (clean URLs + fallback)
 app.get(['/services/tickets/claim', '/claim', '/claim-ticket.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'claim-ticket.html'));
+});
+
+// Recipient Mini My Tickets route
+app.get(['/my-tickets', '/my-tickets.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'my-tickets.html'));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -327,6 +434,11 @@ app.post('/api/auth/register', (req, res) => {
     { id: Date.now() + 21, event_id: skzEvent.id, user_id: newUser.id, seat_label: 'SEAT 15', seat_number: 15, section: 'SEC 102', row_name: 'F', status: 'active', barcode_code: '9301294810291102' }
   );
 
+  saveStore();
+  dbUpsertUser(newUser);
+  dbUpsertEvent(u2Event);
+  dbUpsertEvent(skzEvent);
+
   res.json({
     success: true,
     token: newUser.id,
@@ -343,15 +455,32 @@ app.post('/api/auth/register', (req, res) => {
   });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  const user = memoryUsers.find(
+  let user = memoryUsers.find(
     u => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password.trim()
   );
+
+  if (!user) {
+    // Check Supabase app_users
+    try {
+      const { data: sbUsers } = await supabase
+        .from('app_users')
+        .select('*')
+        .ilike('email', email.trim())
+        .eq('password', password.trim())
+        .limit(1);
+      if (sbUsers && sbUsers.length > 0) {
+        user = sbUsers[0];
+        memoryUsers.push(user);
+        saveStore();
+      }
+    } catch (e) {}
+  }
 
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password.' });
@@ -397,6 +526,8 @@ app.put('/api/user/profile', (req, res) => {
   if (city !== undefined) user.city = city.trim();
   if (country !== undefined) user.country = country.trim();
 
+  saveStore();
+  dbUpsertUser(user);
   res.json({ success: true, user });
 });
 
@@ -407,6 +538,8 @@ app.put('/api/user/settings', (req, res) => {
     ...user.settings,
     ...req.body
   };
+  saveStore();
+  dbUpsertUser(user);
   res.json({ success: true, settings: user.settings });
 });
 
@@ -415,6 +548,8 @@ app.post('/api/user/buy-passes', (req, res) => {
   const user = getRequestUser(req);
   const qty = parseInt(req.body.quantity, 10) || 2;
   user.wallet_passes = (user.wallet_passes || 0) + qty;
+  saveStore();
+  dbUpsertUser(user);
   res.json({ success: true, wallet_passes: user.wallet_passes, added: qty });
 });
 
@@ -1009,7 +1144,10 @@ app.post('/api/transfer', (req, res) => {
 async function init() {
   try {
     const { data, error } = await supabase.from('events').select('id').limit(1);
-    if (!error) console.log('[Supabase] Connected to live Supabase database.');
+    if (!error) {
+      console.log('[Supabase] Connected to live Supabase database.');
+      await syncFromSupabase();
+    }
   } catch (err) {}
 
   app.listen(PORT, () => {

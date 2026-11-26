@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ticketmaster - My Tickets</title>
+  <link rel="icon" href="/assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #f3f4f6;
+      color: #111827;
+      min-height: 100vh;
+    }
+
+    .app-wrap {
+      max-width: 440px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #f3f4f6;
+      position: relative;
+      padding-bottom: 40px;
+    }
+
+    /* Top Country Bar */
+    .top-country-bar {
+      background: #121214;
+      color: #ffffff;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Blue Ticketmaster Header */
+    .tm-blue-header {
+      background: #026cdf;
+      color: #ffffff;
+      padding: 14px 16px 0 16px;
+    }
+
+    .tm-nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .tm-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .tm-logo {
+      font-size: 21px;
+      font-weight: 800;
+      font-style: italic;
+      letter-spacing: -0.5px;
+    }
+
+    .tm-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .breadcrumb {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 10px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: -0.3px;
+    }
+
+    /* Tabs */
+    .header-tabs {
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-tab {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14.5px;
+      font-weight: 600;
+      padding: 10px 0 12px 0;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .header-tab.active {
+      color: #ffffff;
+    }
+
+    .header-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #ffffff;
+    }
+
+    /* Events Container */
+    .events-container {
+      padding: 16px;
+    }
+
+    .event-card {
+      background: #000000;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .event-card-img {
+      width: 100%;
+      height: 210px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    .event-card-date-badge {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      background: rgba(0, 0, 0, 0.85);
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      padding: 8px 14px;
+      text-transform: uppercase;
+    }
+
+    .event-card-tix-pill {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #026cdf;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .event-card-body {
+      padding: 16px 14px 18px 14px;
+      background: #000000;
+      color: #ffffff;
+    }
+
+    .event-card-title {
+      font-size: 19px;
+      font-weight: 800;
+      line-height: 1.25;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .event-card-line {
+      width: 48%;
+      height: 3px;
+      background: #ffffff;
+      margin-bottom: 12px;
+    }
+
+    .event-card-venue {
+      font-size: 13.5px;
+      color: #e5e7eb;
+    }
+
+    /* Info Box */
+    .info-notice {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .info-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #6b7280;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .empty-state {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 32px 20px;
+      text-align: center;
+      color: #4b5563;
+      font-size: 14px;
+    }
+
+    /* Ticket Detail Modal */
+    .ticket-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 900;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .ticket-modal.open {
+      display: flex;
+    }
+
+    .ticket-sheet {
+      width: 100%;
+      max-width: 440px;
+      max-height: 88vh;
+      background: #ffffff;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      overflow-y: auto;
+      padding: 16px 18px 32px 18px;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+
+    .sheet-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .seat-pass-card {
+      background: #026cdf;
+      color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(2, 108, 223, 0.25);
+    }
+
+    .spc-top {
+      padding: 12px 16px;
+      background: #0257b4;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .spc-grid {
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 12px;
+      text-align: center;
+    }
+
+    .spc-label {
+      font-size: 11px;
+      opacity: 0.85;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .spc-val {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .spc-barcode-box {
+      background: #ffffff;
+      color: #111827;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .barcode-bars {
+      height: 52px;
+      background: repeating-linear-gradient(
+        90deg,
+        #111827,
+        #111827 2px,
+        #ffffff 2px,
+        #ffffff 5px,
+        #111827 5px,
+        #111827 6px,
+        #ffffff 6px,
+        #ffffff 9px
+      );
+      width: 82%;
+      margin: 0 auto 8px auto;
+    }
+
+    .barcode-num {
+      font-size: 11px;
+      color: #6b7280;
+      letter-spacing: 2px;
+    }
+
+    /* Account Menu */
+    .account-pill {
+      background: rgba(255,255,255,0.18);
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrap">
+    <!-- Top Country Bar -->
+    <div class="top-country-bar">
+      <span>🇺🇸</span>
+      <span>US</span>
+      <span id="recipientEmailBadge" style="margin-left:auto; font-size:12px; color:#9ca3af;"></span>
+    </div>
+
+    <!-- Blue Header -->
+    <header class="tm-blue-header">
+      <div class="tm-nav-row">
+        <div class="tm-nav-left">
+          <button class="icon-btn" onclick="alert('Ticketmaster Menu')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+          </button>
+          <span class="tm-logo">ticketmaster®</span>
+        </div>
+        <div class="tm-nav-right">
+          <button class="icon-btn" onclick="handleAccountClick()" title="Account">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="breadcrumb">Home / My Tickets</div>
+      <h1 class="page-title">My Tickets</h1>
+
+      <div class="header-tabs">
+        <button class="header-tab active" onclick="switchTab('upcoming', this)">Upcoming Events</button>
+        <button class="header-tab" onclick="switchTab('past', this)">Past Events</button>
+        <button class="header-tab" onclick="switchTab('listings', this)">My Listings</button>
+      </div>
+    </header>
+
+    <!-- Events Content -->
+    <main class="events-container" id="eventsContainer">
+      <div class="empty-state">Loading your tickets...</div>
+    </main>
+  </div>
+
+  <!-- Ticket Details Sheet -->
+  <div class="ticket-modal" id="ticketDetailModal">
+    <div class="ticket-sheet">
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title" id="modalEventTitle">Event Tickets</div>
+          <div style="font-size:12px; color:#6b7280;" id="modalEventMeta"></div>
+        </div>
+        <button onclick="closeTicketModal()" style="background:none; border:none; font-size:22px; color:#6b7280; cursor:pointer;">✕</button>
+      </div>
+      <div id="modalTicketsList"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let recipientEvents = [];
+    let currentTab = 'upcoming';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const stored = localStorage.getItem('tm_user');
+      if (stored) {
+        try { currentUser = JSON.parse(stored); } catch (e) {}
+      }
+
+      if (currentUser && currentUser.email) {
+        document.getElementById('recipientEmailBadge').textContent = currentUser.email;
+      }
+
+      await loadRecipientEvents();
+    });
+
+    async function loadRecipientEvents() {
+      const container = document.getElementById('eventsContainer');
+      if (!currentUser || !currentUser.id) {
+        container.innerHTML = `<div class="empty-state">No accepted tickets found. Please open the claim link from your email to view your tickets.</div>`;
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/events', {
+          headers: { 'x-user-id': currentUser.id }
+        });
+        const events = await res.json();
+        recipientEvents = Array.isArray(events) ? events : [];
+        renderEvents();
+      } catch (err) {
+        container.innerHTML = `<div class="empty-state">Could not load tickets. Please refresh.</div>`;
+      }
+    }
+
+    function switchTab(tab, btn) {
+      currentTab = tab;
+      document.querySelectorAll('.header-tab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderEvents();
+    }
+
+    function renderEvents() {
+      const container = document.getElementById('eventsContainer');
+      if (currentTab !== 'upcoming') {
+        container.innerHTML = `
+          <div class="empty-state">
+            ${currentTab === 'past' ? 'You have no past events.' : 'You have no active listings.'}
+          </div>
+        `;
+        return;
+      }
+
+      if (!recipientEvents || recipientEvents.length === 0) {
+        container.innerHTML = `<div class="empty-state">You have no upcoming tickets yet.</div>`;
+        return;
+      }
+
+      const cardsHtml = recipientEvents.map(ev => `
+        <div class="event-card" onclick="openEventTickets(${ev.id})">
+          <div class="event-card-img" style="background-image: url('${ev.artist_image || '/assets/u2_banner.jpg'}');">
+            <div class="event-card-tix-pill">${ev.ticket_count || 1} Ticket${(ev.ticket_count || 1) > 1 ? 's' : ''}</div>
+            <div class="event-card-date-badge">${ev.event_date || ''}</div>
+          </div>
+          <div class="event-card-body">
+            <div class="event-card-title">${ev.artist_name}</div>
+            <div class="event-card-line"></div>
+            <div class="event-card-venue">${ev.venue_name}${ev.venue_city ? ' - ' + ev.venue_city : ''}</div>
+          </div>
+        </div>
+      `).join('');
+
+      container.innerHTML = `
+        ${cardsHtml}
+        <div class="info-notice">
+          <div class="info-icon">i</div>
+          <div>Your tickets will be available in your account 24 hours prior to the event. Please access them via the Ticketmaster app.</div>
+        </div>
+      `;
+    }
+
+    async function openEventTickets(eventId) {
+      const ev = recipientEvents.find(e => e.id === eventId);
+      if (!ev) return;
+
+      document.getElementById('modalEventTitle').textContent = ev.artist_name;
+      document.getElementById('modalEventMeta').textContent = `${ev.event_date} • ${ev.venue_name}`;
+
+      const listEl = document.getElementById('modalTicketsList');
+      listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#6b7280;">Loading tickets...</div>';
+      document.getElementById('ticketDetailModal').classList.add('open');
+
+      try {
+        const res = await fetch(`/api/events/${eventId}/tickets`, {
+          headers: { 'x-user-id': currentUser.id }
+        });
+        const tickets = await res.json();
+
+        if (!Array.isArray(tickets) || tickets.length === 0) {
+          listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#6b7280;">No active tickets for this event.</div>';
+          return;
+        }
+
+        listEl.innerHTML = tickets.map((t, idx) => `
+          <div class="seat-pass-card">
+            <div class="spc-top">${ev.badge_text || 'Mobile Ticket'} • Ticket ${idx + 1} of ${tickets.length}</div>
+            <div class="spc-grid">
+              <div>
+                <div class="spc-label">SEC</div>
+                <div class="spc-val">${t.section || ev.section || 'GA'}</div>
+              </div>
+              <div>
+                <div class="spc-label">ROW</div>
+                <div class="spc-val">${t.row_name || ev.row_name || 'GA'}</div>
+              </div>
+              <div>
+                <div class="spc-label">SEAT</div>
+                <div class="spc-val">${t.seat_number || t.seat_label || (idx + 1)}</div>
+              </div>
+            </div>
+            <div class="spc-barcode-box">
+              <div class="barcode-bars"></div>
+              <div class="barcode-num">${t.barcode_code || '8192048102941102'}</div>
+              <div style="margin-top:8px; font-size:11.5px; color:#026cdf; font-weight:700;">Verified Transfer Ticket</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Failed to load tickets.</div>';
+      }
+    }
+
+    function closeTicketModal() {
+      document.getElementById('ticketDetailModal').classList.remove('open');
+    }
+
+    function handleAccountClick() {
+      if (!currentUser) return;
+      if (confirm(`Signed in as ${currentUser.email}\n\nSign out?`)) {
+        localStorage.removeItem('tm_user');
+        window.location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

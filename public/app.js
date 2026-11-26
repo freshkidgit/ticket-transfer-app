@@ -1608,6 +1608,116 @@ function updateLayoutUI() {
   }
 }
 
+const APP_TRANSLATIONS = {
+  en: {
+    navHome: 'Home', navTickets: 'My Tickets', navAccount: 'Account',
+    searchPlaceholder: 'Search by Artist, Event or Venue',
+    concerts: 'Concerts', sports: 'Sports', arts: 'Arts & Theater', family: 'Family',
+    trending: 'Trending', popularNear: 'Popular Near You', discoverMore: 'Discover More',
+    myEvents: 'My Events', help: 'Help', upcoming: 'UPCOMING', past: 'PAST',
+    allUpcoming: 'All Upcoming Events', viewTickets: 'View Tickets', transfer: 'Transfer', sell: 'Sell',
+    ticketsTab: 'Tickets', extrasTab: 'Extras', moreOptions: 'MORE OPTIONS',
+    getDirections: 'Get Directions', youGotTickets: 'YOU GOT TICKETS!',
+    selectTicketsTransfer: 'SELECT TICKETS TO TRANSFER', next: 'Next',
+    recipientDetails: 'RECIPIENT DETAILS', transferTickets: 'Transfer Tickets',
+    accountTitle: 'Account', myProfile: 'My Profile', location: 'Location',
+    notifications: 'Notifications', helpSupport: 'Help & Support', feedback: 'Give Us Feedback', signOut: 'Sign Out'
+  },
+  es: {
+    navHome: 'Inicio', navTickets: 'Mis Boletos', navAccount: 'Cuenta',
+    searchPlaceholder: 'Buscar por Artista, Evento o Recinto',
+    concerts: 'Conciertos', sports: 'Deportes', arts: 'Arte y Teatro', family: 'Familia',
+    trending: 'Tendencias', popularNear: 'Popular Cerca de Ti', discoverMore: 'Descubre Más',
+    myEvents: 'Mis Eventos', help: 'Ayuda', upcoming: 'PRÓXIMOS', past: 'PASADOS',
+    allUpcoming: 'Todos los Próximos Eventos', viewTickets: 'Ver Boletos', transfer: 'Transferir', sell: 'Vender',
+    ticketsTab: 'Boletos', extrasTab: 'Extras', moreOptions: 'MÁS OPCIONES',
+    getDirections: 'Cómo Llegar', youGotTickets: '¡TIENES BOLETOS!',
+    selectTicketsTransfer: 'SELECCIONAR BOLETOS A TRANSFERIR', next: 'Siguiente',
+    recipientDetails: 'DATOS DEL DESTINATARIO', transferTickets: 'Transferir Boletos',
+    accountTitle: 'Cuenta', myProfile: 'Mi Perfil', location: 'Ubicación',
+    notifications: 'Notificaciones', helpSupport: 'Ayuda y Soporte', feedback: 'Enviar Comentarios', signOut: 'Cerrar Sesión'
+  },
+  fr: {
+    navHome: 'Accueil', navTickets: 'Mes Billets', navAccount: 'Compte',
+    searchPlaceholder: 'Rechercher par Artiste, Événement ou Lieu',
+    concerts: 'Concerts', sports: 'Sports', arts: 'Arts et Théâtre', family: 'Famille',
+    trending: 'Tendances', popularNear: 'Populaire Près de Vous', discoverMore: 'Découvrir Plus',
+    myEvents: 'Mes Événements', help: 'Aide', upcoming: 'À VENIR', past: 'PASSÉS',
+    allUpcoming: 'Tous les Événements à Venir', viewTickets: 'Voir les Billets', transfer: 'Transférer', sell: 'Vendre',
+    ticketsTab: 'Billets', extrasTab: 'Extras', moreOptions: 'PLUS D\'OPTIONS',
+    getDirections: 'Itinéraire', youGotTickets: 'VOUS AVEZ VOS BILLETS !',
+    selectTicketsTransfer: 'SÉLECTIONNER LES BILLETS À TRANSFÉRER', next: 'Suivant',
+    recipientDetails: 'COORDONNÉES DU DESTINATAIRE', transferTickets: 'Transférer les Billets',
+    accountTitle: 'Compte', myProfile: 'Mon Profil', location: 'Emplacement',
+    notifications: 'Notifications', helpSupport: 'Aide et Support', feedback: 'Donner votre Avis', signOut: 'Se Déconnecter'
+  }
+};
+
+function applyAppLanguage(lang) {
+  const t = APP_TRANSLATIONS[lang] || APP_TRANSLATIONS.en;
+
+  // Bottom nav (Keep Watchlist in English as requested)
+  const setLabel = (btnId, text) => {
+    const el = document.querySelector(`#${btnId} .nav-label`);
+    if (el) el.textContent = text;
+  };
+  setLabel('btnTabHome', t.navHome);
+  setLabel('btnTabTickets', t.navTickets);
+  setLabel('btnTabAccount', t.navAccount);
+
+  // Home screen
+  const searchIn = document.getElementById('homeSearchInput');
+  if (searchIn) searchIn.placeholder = t.searchPlaceholder;
+  const catNames = document.querySelectorAll('#viewHome .cat-label, #viewHome .cat-name');
+  if (catNames.length >= 4) {
+    catNames[0].textContent = t.concerts;
+    catNames[1].textContent = t.sports;
+    catNames[2].textContent = t.arts;
+    catNames[3].textContent = t.family;
+  }
+
+  // My Tickets screen
+  const evTitle = document.querySelector('#viewTickets .tickets-top-title, #viewTickets .my-events-title');
+  if (evTitle) evTitle.textContent = t.myEvents;
+  const helpBtn = document.querySelector('#viewTickets .help-link, #viewTickets .tickets-help-btn');
+  if (helpBtn) helpBtn.textContent = t.help;
+  const allUp = document.querySelector('#viewTickets .all-upcoming-heading');
+  if (allUp) allUp.textContent = t.allUpcoming;
+
+  // Event Details Modal
+  const viewTixBtn = document.querySelector('.edm-view-tickets-btn');
+  if (viewTixBtn) {
+    const svg = viewTixBtn.querySelector('svg');
+    viewTixBtn.innerHTML = '';
+    if (svg) viewTixBtn.appendChild(svg);
+    viewTixBtn.appendChild(document.createTextNode(' ' + t.viewTickets));
+  }
+  const tabTix = document.getElementById('edmTabTickets');
+  if (tabTix) tabTix.textContent = t.ticketsTab;
+  const tabExt = document.getElementById('edmTabExtras');
+  if (tabExt) tabExt.textContent = t.extrasTab;
+  const moreH = document.querySelector('.edm-more-heading');
+  if (moreH) moreH.textContent = t.moreOptions;
+  const dirBtn = document.querySelector('.dmc-directions-btn');
+  if (dirBtn) dirBtn.textContent = t.getDirections;
+
+  // Transfer Modals
+  const ts1Title = document.querySelector('#transferStep1Modal .tdm-sheet-title');
+  if (ts1Title) ts1Title.textContent = t.selectTicketsTransfer;
+  const ts1Next = document.getElementById('proceedToRecipientBtn');
+  if (ts1Next) ts1Next.textContent = t.next;
+  const ts2Title = document.querySelector('#transferStep2Modal .tdm-sheet-title');
+  if (ts2Title) ts2Title.textContent = t.recipientDetails;
+  const ts2Btn = document.getElementById('finishTransferBtn');
+  if (ts2Btn) ts2Btn.textContent = t.transferTickets;
+
+  // Account Tab (excluding Admin Tools & Settings which stay English)
+  const accTitle = document.querySelector('#viewAccount .tma-header-title');
+  if (accTitle) accTitle.textContent = t.accountTitle;
+  const signOutBtn = document.querySelector('#viewAccount .logout-btn');
+  if (signOutBtn) signOutBtn.textContent = t.signOut;
+}
+
 function setAppLanguage(lang) {
   if (!currentUser.settings) currentUser.settings = {};
   currentUser.settings.language = lang;
@@ -1616,6 +1726,7 @@ function setAppLanguage(lang) {
     const btn = document.getElementById(`btnLang${l.charAt(0).toUpperCase() + l.slice(1)}`);
     if (btn) btn.classList.toggle('active', l === lang);
   });
+  applyAppLanguage(lang);
 }
 
 function setPaymentMethod(method) {
