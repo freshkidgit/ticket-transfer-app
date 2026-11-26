@@ -2,11 +2,11 @@
 
 // State
 let currentUser = {
-  id: 'user-toom-001',
-  email: 'toom41170@gmail.com',
-  display_name: 'Serena',
-  city: 'Zagreb',
-  country: 'Croatia',
+  id: null,
+  email: '',
+  display_name: 'Guest',
+  city: 'Los Angeles',
+  country: 'United States',
   days_left: 22,
   wallet_passes: 0,
   settings: {
@@ -142,8 +142,8 @@ function renderHome() {
 }
 
 function renderWatchlist() {
-  const name = currentUser.display_name || 'Toom';
-  const email = currentUser.email || 'toom41170@gmail.com';
+  const name = currentUser.display_name || 'Guest';
+  const email = currentUser.email || 'Not signed in';
   const initials = name.slice(0, 2).toUpperCase();
 
   const pscAvatar = document.getElementById('pscAvatar');
@@ -295,8 +295,8 @@ function renderMyEvents() {
 }
 
 function renderAccountTab() {
-  const name = currentUser.display_name || 'Toom';
-  const email = currentUser.email || 'toom41170@gmail.com';
+  const name = currentUser.display_name || 'Guest';
+  const email = currentUser.email || 'Not signed in';
   const initials = name.slice(0, 2).toUpperCase();
 
   const avatar = document.getElementById('accTabAvatar');
@@ -1479,8 +1479,8 @@ function checkWatchlistAuth() {
 // New Account Tab render (for the Ticketmaster-exact design)
 // ----------------------------------------------------------------
 function renderAccountTab() {
-  const name = currentUser.display_name || 'Serena';
-  const email = currentUser.email || 'toom41170@gmail.com';
+  const name = currentUser.display_name || 'Guest';
+  const email = currentUser.email || 'Not signed in';
   const initial = name.charAt(0).toUpperCase();
 
   const avatarEl = document.getElementById('accTabAvatar');
@@ -1493,8 +1493,8 @@ function renderAccountTab() {
 
 // Also keep rendering the Watchlist (dashboard) profile card
 function renderWatchlistProfile() {
-  const name = currentUser.display_name || 'Toom';
-  const email = currentUser.email || 'toom41170@gmail.com';
+  const name = currentUser.display_name || 'Guest';
+  const email = currentUser.email || 'Not signed in';
   const initials = name.slice(0, 2).toUpperCase();
 
   const pscAvatar = document.getElementById('pscAvatar');
