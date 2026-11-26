@@ -169,15 +169,20 @@ async function dbUpsertUser(u) {
 
 function hydrateUserFromSupabase(u) {
   if (!u || !u.settings) return;
+  // Hydrate events from settings._events (primary per-user storage)
   if (Array.isArray(u.settings._events)) {
     u.settings._events.forEach(ev => {
+      // Ensure user_id is tagged on the event
+      ev.user_id = u.id;
       if (!memoryEvents.find(me => me.id === ev.id)) {
         memoryEvents.push(ev);
       }
     });
   }
+  // Hydrate tickets from settings._tickets
   if (Array.isArray(u.settings._tickets)) {
     u.settings._tickets.forEach(t => {
+      t.user_id = u.id;
       if (!memoryTickets.find(mt => mt.id === t.id)) {
         memoryTickets.push(t);
       }
@@ -186,13 +191,12 @@ function hydrateUserFromSupabase(u) {
 }
 
 async function dbUpsertEvent(ev) {
+  // Only send columns that exist in the Supabase events table
   try {
     await supabase.from('events').upsert({
       id: ev.id,
-      user_id: ev.user_id,
       artist_name: ev.artist_name,
       tour_name: ev.tour_name,
-      event_type: ev.event_type,
       badge_text: ev.badge_text,
       section: ev.section,
       row_name: ev.row_name,
@@ -200,16 +204,14 @@ async function dbUpsertEvent(ev) {
       venue_name: ev.venue_name,
       venue_city: ev.venue_city,
       event_date: ev.event_date,
-      purchase_date: ev.purchase_date,
-      entrance_details: ev.entrance_details,
+      countdown_target: ev.countdown_target || null,
       ticket_price: ev.ticket_price,
       service_fee: ev.service_fee,
       order_number: ev.order_number,
       artist_image: ev.artist_image,
       map_image: ev.map_image,
-      favicon_url: ev.favicon_url,
+      favicon_url: ev.favicon_url || '',
       ticket_count: ev.ticket_count,
-      is_hidden: !!ev.is_hidden,
       updated_at: new Date().toISOString()
     });
   } catch (e) {}
@@ -217,11 +219,11 @@ async function dbUpsertEvent(ev) {
 
 async function dbUpsertTickets(tix) {
   if (!Array.isArray(tix) || tix.length === 0) return;
+  // Only send columns that exist in the Supabase tickets table (no user_id)
   try {
     await supabase.from('tickets').upsert(tix.map(t => ({
       id: t.id,
       event_id: t.event_id,
-      user_id: t.user_id,
       seat_label: t.seat_label,
       seat_number: t.seat_number,
       section: t.section,
@@ -237,11 +239,11 @@ async function dbUpsertTickets(tix) {
 }
 
 async function dbSaveTransfer(tr) {
+  // Note: transfers table has no user_id column, store in-memory + data_store.json only
   try {
     await supabase.from('transfers').upsert({
       id: tr.id,
       event_id: tr.event_id,
-      user_id: tr.user_id,
       ticket_ids: tr.ticket_ids,
       first_name: tr.first_name,
       last_name: tr.last_name,
@@ -255,35 +257,28 @@ async function dbSaveTransfer(tr) {
 
 async function syncFromSupabase() {
   try {
+    // Load all registered users from Supabase and hydrate their events/tickets
     const { data: users, error: uErr } = await supabase.from('app_users').select('*');
     if (!uErr && Array.isArray(users) && users.length > 0) {
       users.forEach(u => {
-        if (!memoryUsers.find(mu => mu.id === u.id || mu.email.toLowerCase() === u.email.toLowerCase())) {
+        // Skip the legacy demo user
+        if (u.id === DEFAULT_USER_ID || (u.email && u.email.toLowerCase().includes('toom4117'))) return;
+        // Add to memory if not already there
+        const existingIdx = memoryUsers.findIndex(mu => mu.id === u.id || mu.email.toLowerCase() === u.email.toLowerCase());
+        if (existingIdx < 0) {
           memoryUsers.push(u);
+        } else {
+          // Merge: keep memory version but update settings from Supabase
+          memoryUsers[existingIdx] = { ...memoryUsers[existingIdx], ...u };
         }
+        // Hydrate their events/tickets from settings._events/_tickets
         hydrateUserFromSupabase(u);
       });
       console.log(`[Supabase] Loaded ${users.length} users from app_users.`);
     }
-
-    const { data: evs, error: eErr } = await supabase.from('events').select('*');
-    if (!eErr && Array.isArray(evs) && evs.length > 0) {
-      evs.forEach(ev => {
-        if (!memoryEvents.find(me => me.id === ev.id)) {
-          memoryEvents.push(ev);
-        }
-      });
-    }
-
-    const { data: tix, error: tErr } = await supabase.from('tickets').select('*');
-    if (!tErr && Array.isArray(tix) && tix.length > 0) {
-      tix.forEach(t => {
-        if (!memoryTickets.find(mt => mt.id === t.id)) {
-          memoryTickets.push(t);
-        }
-      });
-    }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[Supabase] syncFromSupabase failed:', e.message);
+  }
 }
 
 // Helper to authenticate request (strict when x-user-id is checked)
@@ -514,11 +509,10 @@ app.post('/api/auth/register', async (req, res) => {
     { id: Date.now() + 21, event_id: skzEvent.id, user_id: newUser.id, seat_label: 'SEAT 15', seat_number: 15, section: 'SEC 102', row_name: 'F', status: 'active', barcode_code: '9301294810291102' }
   );
 
+  // IMPORTANT: Save store first so memoryEvents has the new events before dbUpsertUser serialises them
   saveStore();
+  // dbUpsertUser reads memoryEvents to build settings._events — call AFTER all events/tickets are pushed
   await dbUpsertUser(newUser);
-  await dbUpsertEvent(u2Event);
-  await dbUpsertEvent(skzEvent);
-  await dbUpsertTickets(memoryTickets.filter(t => t.user_id === newUser.id));
 
   res.json({
     success: true,
@@ -557,8 +551,36 @@ app.post('/api/auth/login', async (req, res) => {
         .limit(1);
       if (sbUsers && sbUsers.length > 0) {
         user = sbUsers[0];
-        memoryUsers.push(user);
+        // Hydrate events/tickets from their Supabase settings._events/_tickets
+        hydrateUserFromSupabase(user);
+        // Add to memory if not already there
+        if (!memoryUsers.find(mu => mu.id === user.id)) {
+          memoryUsers.push(user);
+        } else {
+          // Update the memory copy with fresh Supabase data
+          const idx = memoryUsers.findIndex(mu => mu.id === user.id);
+          if (idx >= 0) memoryUsers[idx] = { ...memoryUsers[idx], ...user };
+        }
         saveStore();
+      }
+    } catch (e) {}
+  } else {
+    // Refresh user from Supabase to get latest events
+    try {
+      const { data: sbUsers } = await supabase
+        .from('app_users')
+        .select('*')
+        .eq('id', user.id)
+        .limit(1);
+      if (sbUsers && sbUsers.length > 0) {
+        const fresh = sbUsers[0];
+        hydrateUserFromSupabase(fresh);
+        // Merge settings from Supabase back into memory user
+        const memIdx = memoryUsers.findIndex(mu => mu.id === user.id);
+        if (memIdx >= 0) {
+          memoryUsers[memIdx] = { ...memoryUsers[memIdx], ...fresh, settings: { ...memoryUsers[memIdx].settings, ...(fresh.settings || {}) } };
+          user = memoryUsers[memIdx];
+        }
       }
     } catch (e) {}
   }
@@ -602,7 +624,10 @@ app.get('/api/auth/me', async (req, res) => {
 
 // Update Profile & Location
 app.put('/api/user/profile', async (req, res) => {
-  const user = await resolveRequestUser(req, true);
+  const user = await resolveRequestUser(req, false);
+  if (!user || user.id === DEFAULT_USER_ID) {
+    return res.status(401).json({ error: 'Please sign in first.' });
+  }
   const { display_name, email, city, country } = req.body;
 
   if (display_name !== undefined) user.display_name = display_name.trim();
@@ -617,7 +642,10 @@ app.put('/api/user/profile', async (req, res) => {
 
 // Update Settings
 app.put('/api/user/settings', async (req, res) => {
-  const user = await resolveRequestUser(req, true);
+  const user = await resolveRequestUser(req, false);
+  if (!user || user.id === DEFAULT_USER_ID) {
+    return res.status(401).json({ error: 'Please sign in first.' });
+  }
   user.settings = {
     ...user.settings,
     ...req.body
@@ -645,14 +673,25 @@ app.get('/api/events', async (req, res) => {
   if (!user) return res.json([]);
 
   let userEvents = memoryEvents.filter(e => e.user_id === user.id);
+
+  // If not in memory, check the user's Supabase app_users.settings._events
   if (userEvents.length === 0) {
     try {
-      const { data: sbEvents } = await supabase.from('events').select('*').eq('user_id', user.id);
-      if (Array.isArray(sbEvents) && sbEvents.length > 0) {
-        sbEvents.forEach(ev => {
+      const { data: sbUser } = await supabase.from('app_users').select('settings').eq('id', user.id).limit(1);
+      if (sbUser && sbUser.length > 0 && sbUser[0].settings && Array.isArray(sbUser[0].settings._events) && sbUser[0].settings._events.length > 0) {
+        sbUser[0].settings._events.forEach(ev => {
+          ev.user_id = user.id; // Ensure user_id is set
           if (!memoryEvents.find(me => me.id === ev.id)) memoryEvents.push(ev);
         });
-        userEvents = sbEvents;
+        // Also hydrate tickets
+        if (Array.isArray(sbUser[0].settings._tickets)) {
+          sbUser[0].settings._tickets.forEach(t => {
+            t.user_id = user.id;
+            if (!memoryTickets.find(mt => mt.id === t.id)) memoryTickets.push(t);
+          });
+        }
+        userEvents = memoryEvents.filter(e => e.user_id === user.id);
+        saveStore();
       }
     } catch (e) {}
   }
@@ -821,7 +860,15 @@ app.post('/api/events/:id/toggle-visibility', async (req, res) => {
 app.get('/api/events/:id/tickets', async (req, res) => {
   const user = await resolveRequestUser(req, false);
   const id = parseInt(req.params.id, 10);
-  const tickets = memoryTickets.filter(t => t.event_id === id && (!user || t.user_id === user.id));
+
+  // Try user-scoped tickets first
+  let tickets = memoryTickets.filter(t => t.event_id === id && user && t.user_id === user.id);
+
+  // If no scoped tickets, fall back to any tickets for this event (handles legacy data)
+  if (tickets.length === 0) {
+    tickets = memoryTickets.filter(t => t.event_id === id);
+  }
+
   res.json(tickets);
 });
 

@@ -1,5 +1,8 @@
 // app.js — Complete Client State, Multi-User Auth, Event CRUD & 2FA Transfer Flow
 
+// Constants
+const DEFAULT_USER_ID_CLIENT = 'user-toom-001';
+
 // State
 let currentUser = {
   id: null,
@@ -40,38 +43,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (storedUser) {
     try {
       const parsed = JSON.parse(storedUser);
-      const isLegacyDemo = !parsed || !parsed.id || parsed.id === 'user-toom-001' || (parsed.email && parsed.email.toLowerCase().includes('toom4117'));
+      const isLegacyDemo = !parsed || !parsed.id
+        || parsed.id === DEFAULT_USER_ID_CLIENT
+        || parsed.id === 'user-toom-001'
+        || (parsed.email && (parsed.email.toLowerCase().includes('toom4117') || parsed.email.toLowerCase().includes('toom41170')));
       if (isLegacyDemo) {
         localStorage.removeItem('tm_user');
         localStorage.removeItem('tm_has_account');
         currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
       } else {
-        currentUser = parsed;
+        currentUser = { ...currentUser, ...parsed };
       }
     } catch (e) {
       localStorage.removeItem('tm_user');
       currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
     }
   } else {
-    // New user: do NOT load default account; prompt to create account
+    // New visitor — guest mode, do NOT auto-login or show demo account
     currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
   }
 
   if (currentUser && currentUser.id) {
+    // Existing signed-in user — load their data
     await loadUserData();
     if (currentUser && currentUser.id) {
       await loadUserEvents();
-      renderAllViews();
     } else {
       userEvents = [];
-      renderAllViews();
-      openAuthModal('register');
     }
   } else {
+    // Guest mode — render empty state, don't force auth modal on boot
     userEvents = [];
-    renderAllViews();
-    openAuthModal('register');
   }
+
+  renderAllViews();
+  checkWatchlistAuth();
 
   // If returning from accepting tickets in claim-ticket.html
   if (window.location.search.includes('accepted=true')) {
@@ -107,11 +113,18 @@ async function apiCall(endpoint, method = 'GET', body = null) {
 // User & Event Data Fetchers
 // ----------------------------------------------------------------
 async function loadUserData() {
+  if (!currentUser || !currentUser.id) return;
   const data = await apiCall('/api/auth/me');
   if (data && data.id) {
-    currentUser = { ...currentUser, ...data };
+    // Merge server data into currentUser, keeping local settings preferences
+    currentUser = {
+      ...currentUser,
+      ...data,
+      settings: { ...(currentUser.settings || {}), ...(data.settings || {}) }
+    };
     localStorage.setItem('tm_user', JSON.stringify(currentUser));
   } else if (data && data.error) {
+    // Session invalid — clear and reset to guest
     localStorage.removeItem('tm_user');
     localStorage.removeItem('tm_has_account');
     currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
@@ -343,8 +356,9 @@ function switchMainTab(viewId) {
   if (activeBtn) activeBtn.classList.add('active');
 
   if (viewId === 'viewWatchlist') {
-    const hasCustomAccount = localStorage.getItem('tm_has_account') === 'true' || localStorage.getItem('tm_user') || (currentUser && currentUser.id && currentUser.id !== 'default-user');
-    if (!hasCustomAccount) {
+    // Prompt auth if not logged in
+    const isLoggedIn = !!(currentUser && currentUser.id && currentUser.id !== DEFAULT_USER_ID_CLIENT);
+    if (!isLoggedIn) {
       openAuthModal('register');
     }
     checkWatchlistAuth();
@@ -1226,6 +1240,7 @@ function handleSettingInput(key, val) {
 }
 
 async function saveSettingsSilently() {
+  if (!currentUser || !currentUser.id) return;
   localStorage.setItem('tm_user', JSON.stringify(currentUser));
   await apiCall('/api/user/settings', 'PUT', currentUser.settings);
 }
@@ -1312,6 +1327,7 @@ function openAuthModal(mode) {
 
 function closeAuthModal() {
   document.getElementById('authModal').classList.remove('open');
+  // Allow guest browsing — don't force re-open
 }
 
 function toggleAuthMode(mode) {
@@ -1337,16 +1353,19 @@ async function handleLoginSubmit(e) {
 
   const res = await apiCall('/api/auth/login', 'POST', { email, password });
   if (res && res.success) {
-    currentUser = res.user;
+    currentUser = { ...currentUser, ...res.user };
     localStorage.setItem('tm_has_account', 'true');
     localStorage.setItem('tm_user', JSON.stringify(currentUser));
     closeAuthModal();
     checkWatchlistAuth();
-    alert(`✓ Signed in as ${currentUser.display_name}!`);
     await loadUserEvents();
     renderAllViews();
+    // Apply saved language & layout after render
+    const lang = currentUser.settings?.language || 'en';
+    if (lang !== 'en') applyAppLanguage(lang);
+    alert(`✓ Signed in as ${currentUser.display_name}!`);
   } else {
-    alert(res?.error || 'Invalid credentials.');
+    alert(res?.error || 'Invalid email or password. Please check and try again.');
   }
 }
 
@@ -1357,6 +1376,11 @@ async function handleRegisterSubmit(e) {
   const password = document.getElementById('regPassword').value.trim();
   const city = document.getElementById('regCity').value.trim();
 
+  if (!email || !password) {
+    alert('Email and password are required.');
+    return;
+  }
+
   const res = await apiCall('/api/auth/register', 'POST', {
     displayName,
     email,
@@ -1365,16 +1389,19 @@ async function handleRegisterSubmit(e) {
   });
 
   if (res && res.success) {
-    currentUser = res.user;
+    currentUser = { ...currentUser, ...res.user };
     localStorage.setItem('tm_has_account', 'true');
     localStorage.setItem('tm_user', JSON.stringify(currentUser));
     closeAuthModal();
     checkWatchlistAuth();
-    alert(`✓ Welcome, ${currentUser.display_name}! Your personal account is ready.`);
     await loadUserEvents();
     renderAllViews();
+    // Apply saved language & layout after render
+    const lang = currentUser.settings?.language || 'en';
+    if (lang !== 'en') applyAppLanguage(lang);
+    alert(`✓ Welcome, ${currentUser.display_name}! Your personal account is ready with your seeded events.`);
   } else {
-    alert(res?.error || 'Registration failed.');
+    alert(res?.error || 'Registration failed. Please try again.');
   }
 }
 
@@ -1382,10 +1409,35 @@ function handleLogout() {
   if (confirm('Are you sure you want to sign out?')) {
     localStorage.removeItem('tm_user');
     localStorage.removeItem('tm_has_account');
-    currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
+    currentUser = {
+      id: null,
+      email: '',
+      display_name: 'Guest',
+      city: 'Los Angeles',
+      country: 'United States',
+      days_left: 22,
+      wallet_passes: 0,
+      settings: {
+        appLayout: 'american',
+        language: 'en',
+        paymentMethod: 'ngn',
+        enableAppleWallet: false,
+        useGoogleWallet: false,
+        showTransferAccepted: false,
+        acceptedByName: 'Mary Flores',
+        showBlankPage: false,
+        showLayout2Countdown: false,
+        enableTransferFee: false,
+        transferFeeAmount: '$50.47'
+      }
+    };
     userEvents = [];
+    activeEvent = null;
+    activeTickets = [];
     renderAllViews();
     checkWatchlistAuth();
+    // Apply English after logout
+    applyAppLanguage('en');
     openAuthModal('login');
   }
 }
@@ -1484,9 +1536,9 @@ document.addEventListener('click', (e) => {
 function checkWatchlistAuth() {
   const gate = document.getElementById('watchlistAuthGate');
   if (!gate) return;
-  // User is considered "logged in" if they have an active user or persisted session
-  const hasUser = (currentUser && currentUser.id && currentUser.id !== 'default-user') || localStorage.getItem('tm_user') || localStorage.getItem('tm_has_account') === 'true';
-  gate.style.display = hasUser ? 'none' : 'flex';
+  // User is logged in only if they have a real non-null, non-guest ID
+  const isLoggedIn = !!(currentUser && currentUser.id && currentUser.id !== 'default-user' && currentUser.id !== DEFAULT_USER_ID_CLIENT);
+  gate.style.display = isLoggedIn ? 'none' : 'flex';
 }
 
 // ----------------------------------------------------------------

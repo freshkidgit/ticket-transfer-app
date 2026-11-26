@@ -17,3 +17,5 @@ tickets.db
 .DS_Store
 .env
 .env.local
+data_store.json
+gmail_config.json
