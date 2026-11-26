@@ -35,17 +35,21 @@ let transferCode = '663100';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-  // Check stored user session
+  // Check stored user session (clear legacy demo user if cached)
   const storedUser = localStorage.getItem('tm_user');
   if (storedUser) {
     try {
       const parsed = JSON.parse(storedUser);
-      if (parsed && parsed.id) {
-        currentUser = parsed;
-      } else {
+      const isLegacyDemo = !parsed || !parsed.id || parsed.id === 'user-toom-001' || (parsed.email && parsed.email.toLowerCase().includes('toom4117'));
+      if (isLegacyDemo) {
+        localStorage.removeItem('tm_user');
+        localStorage.removeItem('tm_has_account');
         currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
+      } else {
+        currentUser = parsed;
       }
     } catch (e) {
+      localStorage.removeItem('tm_user');
       currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
     }
   } else {
@@ -55,8 +59,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (currentUser && currentUser.id) {
     await loadUserData();
-    await loadUserEvents();
-    renderAllViews();
+    if (currentUser && currentUser.id) {
+      await loadUserEvents();
+      renderAllViews();
+    } else {
+      userEvents = [];
+      renderAllViews();
+      openAuthModal('register');
+    }
   } else {
     userEvents = [];
     renderAllViews();
@@ -101,6 +111,10 @@ async function loadUserData() {
   if (data && data.id) {
     currentUser = { ...currentUser, ...data };
     localStorage.setItem('tm_user', JSON.stringify(currentUser));
+  } else if (data && data.error) {
+    localStorage.removeItem('tm_user');
+    localStorage.removeItem('tm_has_account');
+    currentUser = { ...currentUser, id: null, email: '', display_name: 'Guest' };
   }
 }
 

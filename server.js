@@ -585,7 +585,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/me', async (req, res) => {
   const user = await resolveRequestUser(req, false);
-  if (!user) {
+  if (!user || user.id === DEFAULT_USER_ID) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   res.json({
