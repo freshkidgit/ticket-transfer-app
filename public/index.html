@@ -242,7 +242,6 @@
         </div>
 
       </div>
-      </div>
 
       <!-- Floating Bottom Pill: Find Events Near You -->
       <div class="floating-near-you-pill" onclick="openCityPicker()">
@@ -954,6 +953,42 @@
     </div>
 
     <!-- ========================================================
+         TRANSFER SUCCESS & GMAIL CONFIRMATION MODAL
+         ======================================================== -->
+    <div class="transfer-drawer-modal" id="transferSuccessModal">
+      <div class="tdm-backdrop" onclick="closeTransferSuccessModal()"></div>
+      <div class="tdm-sheet" style="padding-bottom: 28px;">
+        <div class="tdm-grab-bar"></div>
+        <div style="text-align: center; margin: 12px 0 16px 0;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: #dcfce7; color: #16a34a; font-size: 26px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">✓</div>
+          <h3 class="tdm-sheet-title" style="margin: 0; font-size: 19px;">Ticket Transfer Dispatched!</h3>
+          <p id="tsmRecipientInfo" style="font-size: 13.5px; color: #64748b; margin-top: 4px;"></p>
+        </div>
+
+        <div id="tsmGmailStatusBox" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.45;">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="rf-group" style="margin-bottom: 16px;">
+          <label class="rf-label" style="font-size: 12.5px; color: #475569; font-weight: 700;">Recipient Authorization / Claim Link</label>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" id="tsmClaimLinkInput" class="rf-input" readonly style="font-size: 12.5px; background: #f1f5f9; color: #334155;">
+            <button type="button" class="primary-black-btn" style="width: auto; padding: 0 16px; font-size: 13px; white-space: nowrap;" onclick="copyClaimLink()">Copy</button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a id="tsmOpenClaimBtn" href="#" target="_blank" class="primary-blue-btn" style="text-decoration: none; text-align: center; display: block; padding: 13px; font-weight: 700; border-radius: 6px; background: #026cdf; color: #fff;">
+            Open Recipient Claim Page
+          </a>
+          <button type="button" class="use-mobile-link" style="margin: 0; text-align: center; padding: 8px;" onclick="closeTransferSuccessModal()">
+            Done & Return to My Tickets
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
          TRANSFER FEE INTERRUPTION MODAL
          ======================================================== -->
     <div class="fee-interruption-modal" id="feeInterruptionModal">
@@ -1074,7 +1109,7 @@
     </div>
 
     <!-- ========================================================
-         SUB-VIEW: CREATE EVENT
+         SUB-VIEW: CREATE EVENT (Screenshots 1 & 2)
          ======================================================== -->
     <div class="manage-subview" id="subViewCreateEvent">
       <div class="msv-header">
@@ -1083,33 +1118,21 @@
         <div style="width:50px;"></div>
       </div>
       <div class="msv-body">
-        <!-- File upload replaces poster -->
+
+        <!-- Manual Event Poster Image Upload -->
         <div class="form-group">
           <label class="form-label">Event Poster Image</label>
           <input type="file" id="cePosterUpload" accept="image/*" class="form-input-file" onchange="handlePosterUpload(event)">
-          <div class="form-helper">Uploading a file replaces the Ticketmaster poster for this submission.</div>
+          <div class="form-helper">Upload a high-res photo to replace the poster for this event.</div>
         </div>
 
-        <!-- Ticketmaster Lookup Box -->
-        <div class="tm-lookup-box">
-          <div class="tml-header">
-            <span class="tml-title">Look up on Ticketmaster</span>
-            <div class="tml-tabs">
-              <button class="tml-tab active">Events</button>
-              <button class="tml-tab">Venues</button>
-            </div>
-          </div>
-          <div class="tml-helper">Search artist or tour in United States ... pick a show date to fill dashboard fields. Change the flag in the header to search another market.</div>
-          <input type="text" id="tmLookupInput" class="tml-input" placeholder="Artist, tour, or event name" oninput="mockTmLookup(this.value)">
-          <div id="tmLookupResults" class="tml-results" style="display:none;"></div>
-        </div>
-
-        <!-- Event Fields -->
+        <!-- Name -->
         <div class="form-group">
           <label class="form-label">Name</label>
           <input type="text" id="ceName" class="form-input" placeholder="e.g. Summer Night Live">
         </div>
 
+        <!-- Event Type -->
         <div class="form-group">
           <label class="form-label">Event type</label>
           <div class="segmented-control">
@@ -1118,6 +1141,7 @@
           </div>
         </div>
 
+        <!-- Date & start time -->
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label">Date &amp; start time</label>
@@ -1129,6 +1153,7 @@
           </div>
         </div>
 
+        <!-- Purchase date & time -->
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label">Purchase date &amp; time</label>
@@ -1139,31 +1164,125 @@
             <input type="time" id="cePurchaseTime" class="form-input" value="10:00">
           </div>
         </div>
-        <div class="form-helper" style="margin-top:-8px; margin-bottom:12px;">Used in Order Details when a ticket seat is tapped.</div>
+        <div class="form-helper" style="margin-top:-8px; margin-bottom:14px;">Used in Order Details when a ticket seat is tapped.</div>
 
+        <!-- Venue & location -->
         <div class="form-group">
           <label class="form-label">Venue &amp; location</label>
-          <input type="text" id="ceVenue" class="form-input" placeholder="e.g. Madison Square Garden - New York, NY">
+          <input type="text" id="ceVenue" class="form-input" placeholder="e.g. Madison Square Garden - New York, NY" oninput="updateCoordsFromVenue(this.value)">
         </div>
 
+        <!-- Entrance details -->
         <div class="form-group">
           <label class="form-label">Entrance details</label>
           <input type="text" id="ceEntrance" class="form-input" placeholder="e.g. 5th 3rd Gate">
           <div class="form-helper">Shown in the Important Notes section on ticket information.</div>
         </div>
 
+        <!-- Coordinates (Lat & Lng) for Google Map -->
         <div class="form-row-2">
           <div class="form-group">
-            <label class="form-label">Section</label>
-            <input type="text" id="ceSection" class="form-input" value="GA">
+            <label class="form-label">Lat</label>
+            <input type="text" id="ceLat" class="form-input" placeholder="40.7505" value="40.7505">
           </div>
           <div class="form-group">
-            <label class="form-label">Number of tickets</label>
-            <input type="number" id="ceTicketCount" class="form-input" value="4" min="1" max="10">
+            <label class="form-label">Lng</label>
+            <input type="text" id="ceLng" class="form-input" placeholder="-73.9934" value="-73.9934">
+          </div>
+        </div>
+        <div class="form-helper" style="margin-top:-8px; margin-bottom:14px;">Map defaults to NYC if coordinates are blank. Map updates automatically.</div>
+
+        <!-- Seat map image URL (optional) -->
+        <div class="form-group">
+          <label class="form-label">Seat map image URL (optional)</label>
+          <input type="text" id="ceMapUrl" class="form-input" placeholder="https://...">
+          <div class="form-helper">Filled automatically when you use Ticketmaster lookup and a map is available.</div>
+        </div>
+
+        <!-- PRICING & ORDER SECTION (Screenshot 1) -->
+        <div class="form-section-card">
+          <div class="sub-label" style="margin-top:0;">PRICING &amp; ORDER</div>
+
+          <div class="form-group">
+            <label class="form-label">Currency</label>
+            <select id="ceCurrency" class="form-select">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="CAD">CAD</option>
+              <option value="AUD">AUD</option>
+              <option value="NGN">NGN</option>
+            </select>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Price (<span id="cePriceCurr">USD</span>)</label>
+              <input type="text" id="cePrice" class="form-input" placeholder="49.99" value="49.99">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fee (<span id="ceFeeCurr">USD</span>)</label>
+              <input type="text" id="ceFee" class="form-input" placeholder="12.50" value="12.50">
+            </div>
+          </div>
+          <div class="form-helper" style="margin-top:-8px; margin-bottom:14px;">Fee requires a ticket price. Shown on ticket details.</div>
+
+          <div class="form-group">
+            <label class="form-label">Order number</label>
+            <div class="form-helper" style="margin-bottom:6px;"># is fixed; enter 1 digit, 5 digits, /, then 2 letters and a digit (e.g. 8-40945/LA2).</div>
+            <div class="order-input-wrap">
+              <span class="order-prefix">#</span>
+              <input type="text" id="ceOrderNumber" class="form-input order-field" placeholder="8-05851/US3" value="8-05851/US3">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Presale / sale label</label>
+            <select id="cePresaleLabel" class="form-select">
+              <option value="General Sale">General Sale</option>
+              <option value="Artist Presale" selected>Artist Presale</option>
+              <option value="VIP Package">VIP Package</option>
+              <option value="Platinum">Platinum</option>
+              <option value="STAY Membership Presale">STAY Membership Presale</option>
+            </select>
           </div>
         </div>
 
-        <button class="primary-blue-btn" onclick="saveNewEvent()">Save Event</button>
+        <!-- TICKETS SECTION (Screenshot 1) -->
+        <div class="form-section-card" style="margin-top:14px;">
+          <div class="sub-label" style="margin-top:0;">TICKETS</div>
+          <div class="form-helper" style="margin-bottom:10px;">1-8 tickets; each row is one seat assignment.</div>
+
+          <div class="segmented-control" style="margin-bottom:14px;">
+            <button class="sc-btn active" id="btnSeatingSeated" onclick="setSeatingType('Seated')">Seated</button>
+            <button class="sc-btn" id="btnSeatingGA" onclick="setSeatingType('General Admission')">General Admission</button>
+          </div>
+
+          <div id="dynamicTicketsList">
+            <!-- Ticket rows -->
+            <div class="ticket-row-card" id="ticketRow_1">
+              <div class="trc-title">Ticket 1</div>
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label class="form-label">Section</label>
+                  <input type="text" class="form-input tix-sec" value="108">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Row</label>
+                  <input type="text" class="form-input tix-row" value="12">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Seat</label>
+                  <input type="text" class="form-input tix-seat" value="3">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="add-ticket-btn" onclick="addNewTicketRow()">+ Add ticket</button>
+        </div>
+
+        <button class="primary-blue-btn" style="width:100%; margin-top:20px;" onclick="saveNewEvent()">Create event</button>
       </div>
     </div>
 

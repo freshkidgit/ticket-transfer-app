@@ -46,6 +46,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadUserData();
   await loadUserEvents();
   renderAllViews();
+
+  // If returning from accepting tickets in claim-ticket.html
+  if (window.location.search.includes('accepted=true')) {
+    switchMainTab('viewTickets');
+    setTimeout(() => {
+      alert('🎟️ Ticket transfer accepted! Your newly received tickets are now available below.');
+    }, 400);
+    window.history.replaceState({}, '', '/');
+  }
 });
 
 // API helper with user ID header
@@ -335,11 +344,18 @@ function switchMainTab(viewId) {
   const activeBtn = document.getElementById(btnMap[viewId]);
   if (activeBtn) activeBtn.classList.add('active');
 
+  // Control floating near-you pill visibility: ONLY on viewHome
+  const nearPill = document.querySelector('.floating-near-you-pill');
+  if (nearPill) {
+    nearPill.style.display = (viewId === 'viewHome') ? 'flex' : 'none';
+  }
+
   if (viewId === 'viewWatchlist') {
-    const hasCustomAccount = localStorage.getItem('tm_has_account');
+    const hasCustomAccount = localStorage.getItem('tm_has_account') === 'true' || localStorage.getItem('tm_user') || (currentUser && currentUser.id && currentUser.id !== 'default-user');
     if (!hasCustomAccount) {
       openAuthModal('register');
     }
+    checkWatchlistAuth();
   }
 }
 
@@ -529,6 +545,10 @@ function renderEventDetailsModal() {
 }
 
 function openDirections() {
+  if (activeEvent?.lat && activeEvent?.lng) {
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeEvent.lat},${activeEvent.lng}`, '_blank');
+    return;
+  }
   const venue = activeEvent?.venue_name || 'San Siro Stadium';
   const city = activeEvent?.venue_city || 'Milano';
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue + ', ' + city)}`, '_blank');
@@ -550,9 +570,11 @@ function handleViewTicketsClick() {
   const s = currentUser.settings || {};
   if (s.showBlankPage) {
     document.getElementById('blankPageOverlay').classList.add('open');
-  } else {
-    if (!activeEvent) openHeroEvent();
-    else openBarcodeModal();
+    return;
+  }
+  const seatsList = document.getElementById('edmSeatsList');
+  if (seatsList) {
+    seatsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
@@ -790,6 +812,12 @@ function cancelTransferFee() {
 }
 
 async function completeTransferProcess(firstName, lastName, contact, note) {
+  const finishBtn = document.getElementById('finishTransferBtn');
+  if (finishBtn) {
+    finishBtn.disabled = true;
+    finishBtn.textContent = 'Sending Transfer & Email...';
+  }
+
   const result = await apiCall(`/api/events/${activeEvent.id}/transfer`, 'POST', {
     ticketIds: selectedTransferTicketIds,
     firstName,
@@ -798,13 +826,78 @@ async function completeTransferProcess(firstName, lastName, contact, note) {
     note
   });
 
+  if (finishBtn) {
+    finishBtn.disabled = false;
+    finishBtn.textContent = 'Transfer Tickets';
+  }
+
   closeTransferDrawers();
-  alert(`✓ Transfer sent to ${firstName} ${lastName} (${contact})!`);
+
+  if (result && result.success) {
+    // Populate Transfer Success Modal
+    const modal = document.getElementById('transferSuccessModal');
+    const recipInfo = document.getElementById('tsmRecipientInfo');
+    const statusBox = document.getElementById('tsmGmailStatusBox');
+    const claimInput = document.getElementById('tsmClaimLinkInput');
+    const openClaimBtn = document.getElementById('tsmOpenClaimBtn');
+
+    if (recipInfo) {
+      recipInfo.textContent = `Sent to ${firstName} ${lastName} (${contact}) • ${selectedTransferTicketIds.length} ticket(s)`;
+    }
+
+    if (claimInput) claimInput.value = result.claimUrl || '';
+    if (openClaimBtn) openClaimBtn.href = result.claimUrl || '#';
+
+    if (statusBox) {
+      if (result.emailResult && result.emailResult.deliveredViaGmail) {
+        statusBox.innerHTML = `
+          <div style="font-weight:700; color:#16a34a; margin-bottom:4px;">✉️ Gmail Delivery Successful</div>
+          <div>Ticketmaster transfer invitation email sent directly to <strong>${contact}</strong> via Gmail!</div>
+        `;
+      } else if (result.emailResult && result.emailResult.reason === 'GMAIL_CONFIG_MISSING') {
+        statusBox.innerHTML = `
+          <div style="font-weight:700; color:#026cdf; margin-bottom:4px;">ℹ️ Live Gmail Ready for Configuration</div>
+          <div>Gmail credentials are not configured yet in settings. The email was prepared and the instant authorization link is ready below.</div>
+        `;
+      } else if (result.emailResult && result.emailResult.error) {
+        statusBox.innerHTML = `
+          <div style="font-weight:700; color:#f59e0b; margin-bottom:4px;">⚠️ Gmail Notice</div>
+          <div>${result.emailResult.message || 'Gmail SMTP failed. You can share the claim link below directly.'}</div>
+        `;
+      } else {
+        statusBox.innerHTML = `
+          <div style="font-weight:700; color:#16a34a; margin-bottom:4px;">✓ Transfer Created</div>
+          <div>Share the authorization link below with the recipient to accept tickets.</div>
+        `;
+      }
+    }
+
+    if (modal) modal.classList.add('open');
+  } else {
+    alert('Failed to process transfer. Please try again.');
+  }
 
   // Refresh data
   await loadUserEvents();
   renderAllViews();
   if (activeEvent) await openEventById(activeEvent.id);
+}
+
+function closeTransferSuccessModal() {
+  const modal = document.getElementById('transferSuccessModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function copyClaimLink() {
+  const input = document.getElementById('tsmClaimLinkInput');
+  if (!input) return;
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(() => {
+    alert('✓ Transfer claim link copied to clipboard!');
+  }).catch(() => {
+    alert('Link selected! You can copy it now.');
+  });
 }
 
 async function loadTransferHistory() {
@@ -878,20 +971,127 @@ function applyTmSuggestion(name, tour, venue) {
   document.getElementById('tmLookupResults').style.display = 'none';
 }
 
+let currentSeatingType = 'Seated';
+function setSeatingType(type) {
+  currentSeatingType = type;
+  const btnSeated = document.getElementById('btnSeatingSeated');
+  const btnGA = document.getElementById('btnSeatingGA');
+  if (btnSeated) btnSeated.classList.toggle('active', type === 'Seated');
+  if (btnGA) btnGA.classList.toggle('active', type === 'General Admission');
+}
+
+function addNewTicketRow() {
+  const container = document.getElementById('dynamicTicketsList');
+  if (!container) return;
+  const currentRows = container.querySelectorAll('.ticket-row-card').length;
+  if (currentRows >= 8) {
+    alert('Maximum 8 tickets allowed per event.');
+    return;
+  }
+  const nextNum = currentRows + 1;
+  const card = document.createElement('div');
+  card.className = 'ticket-row-card';
+  card.id = `ticketRow_${nextNum}`;
+  card.innerHTML = `
+    <div class="trc-title" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>Ticket ${nextNum}</span>
+      <button type="button" style="background:none; border:none; color:#ef4444; font-size:12px; cursor:pointer;" onclick="this.closest('.ticket-row-card').remove(); renumberTicketRows();">Remove</button>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">Section</label>
+        <input type="text" class="form-input tix-sec" value="${currentSeatingType === 'General Admission' ? 'GA' : '108'}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Row</label>
+        <input type="text" class="form-input tix-row" value="${currentSeatingType === 'General Admission' ? '' : '12'}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Seat</label>
+        <input type="text" class="form-input tix-seat" value="${nextNum}">
+      </div>
+    </div>
+  `;
+  container.appendChild(card);
+}
+
+function renumberTicketRows() {
+  const container = document.getElementById('dynamicTicketsList');
+  if (!container) return;
+  const rows = container.querySelectorAll('.ticket-row-card');
+  rows.forEach((row, idx) => {
+    const titleSpan = row.querySelector('.trc-title span');
+    if (titleSpan) titleSpan.textContent = `Ticket ${idx + 1}`;
+  });
+}
+
+function updateCoordsFromVenue(val) {
+  if (!val) return;
+  const v = val.toLowerCase();
+  const latEl = document.getElementById('ceLat');
+  const lngEl = document.getElementById('ceLng');
+  if (!latEl || !lngEl) return;
+  if (v.includes('san siro') || v.includes('milano')) {
+    latEl.value = '45.4781';
+    lngEl.value = '9.1240';
+  } else if (v.includes('madison square') || v.includes('new york') || v.includes('msg')) {
+    latEl.value = '40.7505';
+    lngEl.value = '-73.9934';
+  } else if (v.includes('gelredome') || v.includes('arnhem')) {
+    latEl.value = '51.9632';
+    lngEl.value = '5.8931';
+  } else if (v.includes('crypto') || v.includes('los angeles') || v.includes('staples')) {
+    latEl.value = '34.0430';
+    lngEl.value = '-118.2673';
+  } else if (v.includes('dodger')) {
+    latEl.value = '34.0739';
+    lngEl.value = '-118.2400';
+  } else if (v.includes('wembley') || v.includes('london')) {
+    latEl.value = '51.5560';
+    lngEl.value = '-0.2795';
+  }
+}
+
 async function saveNewEvent() {
-  const name = document.getElementById('ceName').value.trim();
-  const venue = document.getElementById('ceVenue').value.trim();
-  const dateVal = document.getElementById('ceEventDate').value;
-  const timeVal = document.getElementById('ceEventTime').value;
-  const pDateVal = document.getElementById('cePurchaseDate').value;
-  const entrance = document.getElementById('ceEntrance').value.trim();
-  const section = document.getElementById('ceSection').value.trim() || 'GA';
-  const count = parseInt(document.getElementById('ceTicketCount').value, 10) || 4;
+  const name = document.getElementById('ceName')?.value.trim();
+  const venue = document.getElementById('ceVenue')?.value.trim();
+  const dateVal = document.getElementById('ceEventDate')?.value;
+  const timeVal = document.getElementById('ceEventTime')?.value;
+  const pDateVal = document.getElementById('cePurchaseDate')?.value;
+  const entrance = document.getElementById('ceEntrance')?.value.trim();
+  const lat = document.getElementById('ceLat')?.value.trim();
+  const lng = document.getElementById('ceLng')?.value.trim();
+  const mapUrl = document.getElementById('ceMapUrl')?.value.trim();
+  const currency = document.getElementById('ceCurrency')?.value || 'USD';
+  const price = parseFloat(document.getElementById('cePrice')?.value) || 49.99;
+  const fee = parseFloat(document.getElementById('ceFee')?.value) || 12.50;
+  const orderNumRaw = document.getElementById('ceOrderNumber')?.value.trim() || '8-05851/US3';
+  const orderNumber = orderNumRaw.startsWith('#') ? orderNumRaw.substring(1).trim() : orderNumRaw;
+  const presaleLabel = document.getElementById('cePresaleLabel')?.value || 'General Sale';
 
   if (!name || !venue) {
     alert('Event name and venue are required.');
     return;
   }
+
+  // Collect ticket rows
+  const ticketRows = [];
+  const cards = document.querySelectorAll('#dynamicTicketsList .ticket-row-card');
+  cards.forEach((card, idx) => {
+    const sec = card.querySelector('.tix-sec')?.value.trim() || 'GA';
+    const row = card.querySelector('.tix-row')?.value.trim() || '';
+    const seat = card.querySelector('.tix-seat')?.value.trim() || String(idx + 1);
+    ticketRows.push({
+      section: sec,
+      row_name: row,
+      seat_number: seat,
+      seat_label: row ? `${sec} / ${row} / ${seat}` : `${sec} ${seat}`
+    });
+  });
+
+  const count = ticketRows.length || 1;
+  const firstSec = ticketRows[0]?.section || 'GA';
+  const firstRow = ticketRows[0]?.row_name || '';
 
   const formattedDate = dateVal ? new Date(`${dateVal}T${timeVal || '19:30'}`).toLocaleDateString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
@@ -905,13 +1105,24 @@ async function saveNewEvent() {
     artist_name: name,
     tour_name: name,
     event_type: currentEventType,
+    badge_text: presaleLabel,
     venue_name: venue.split('-')[0].trim(),
     venue_city: venue.split('-')[1]?.trim() || currentUser.city,
     event_date: formattedDate,
     purchase_date: formattedPurchDate,
     entrance_details: entrance || 'Gate 1 Entrance',
-    section: section,
+    lat: lat || '40.7505',
+    lng: lng || '-73.9934',
+    map_image: mapUrl || '/assets/venue_map_crop.png',
+    currency: currency,
+    ticket_price: price,
+    service_fee: fee,
+    order_number: orderNumber,
+    section: firstSec,
+    row_name: firstRow,
+    seat_type: currentSeatingType,
     ticket_count: count,
+    tickets: ticketRows,
     artist_image: newPosterBase64 || '/assets/u2_banner.jpg'
   });
 
@@ -1119,8 +1330,10 @@ async function handleLoginSubmit(e) {
   const res = await apiCall('/api/auth/login', 'POST', { email, password });
   if (res && res.success) {
     currentUser = res.user;
+    localStorage.setItem('tm_has_account', 'true');
     localStorage.setItem('tm_user', JSON.stringify(currentUser));
     closeAuthModal();
+    checkWatchlistAuth();
     alert(`✓ Signed in as ${currentUser.display_name}!`);
     await loadUserEvents();
     renderAllViews();
@@ -1145,8 +1358,10 @@ async function handleRegisterSubmit(e) {
 
   if (res && res.success) {
     currentUser = res.user;
+    localStorage.setItem('tm_has_account', 'true');
     localStorage.setItem('tm_user', JSON.stringify(currentUser));
     closeAuthModal();
+    checkWatchlistAuth();
     alert(`✓ Welcome, ${currentUser.display_name}! Your personal account is ready.`);
     await loadUserEvents();
     renderAllViews();
@@ -1158,6 +1373,8 @@ async function handleRegisterSubmit(e) {
 function handleLogout() {
   if (confirm('Are you sure you want to sign out?')) {
     localStorage.removeItem('tm_user');
+    localStorage.removeItem('tm_has_account');
+    checkWatchlistAuth();
     openAuthModal('login');
   }
 }
@@ -1256,8 +1473,8 @@ document.addEventListener('click', (e) => {
 function checkWatchlistAuth() {
   const gate = document.getElementById('watchlistAuthGate');
   if (!gate) return;
-  // User is considered "logged in" if they have an id from server or localStorage
-  const hasUser = currentUser && currentUser.id && currentUser.email;
+  // User is considered "logged in" if they have an active user or persisted session
+  const hasUser = (currentUser && currentUser.id && currentUser.id !== 'default-user') || localStorage.getItem('tm_user') || localStorage.getItem('tm_has_account') === 'true';
   gate.style.display = hasUser ? 'none' : 'flex';
 }
 

@@ -142,6 +142,7 @@ async function loadAdminData() {
     renderTicketsTable(tickets);
     renderTransfersTable(transfers);
     applyCurrentFavicon(currentEvent);
+    loadGmailSettings();
   } catch (err) {
     console.error('Error loading admin data:', err);
   }
@@ -396,7 +397,8 @@ function renderTransfersTable(transfers) {
       <td><span class="status-badge ${transfer.status}">${transfer.status}</span></td>
       <td>${dateFormatted}</td>
       <td>
-        ${transfer.status === 'pending' ? `<a class="action-link" onclick="cancelBatchTransfer(${transfer.id})">Cancel Batch</a>` : '—'}
+        ${transfer.claim_url ? `<a href="${transfer.claim_url}" target="_blank" class="action-link" style="margin-right:8px; color:#38bdf8;">🔗 View Claim</a>` : ''}
+        ${transfer.status === 'pending' ? `<a class="action-link" style="color:#ef4444;" onclick="cancelBatchTransfer(${transfer.id})">Cancel Batch</a>` : ''}
       </td>
     `;
     tbody.appendChild(tr);
@@ -532,4 +534,80 @@ function showAlert(msg) {
   setTimeout(() => {
     alertEl.style.display = 'none';
   }, 4000);
+}
+
+// ================================================================
+// GMAIL SETTINGS & TESTING
+// ================================================================
+async function loadGmailSettings() {
+  try {
+    const res = await fetch('/api/settings/email');
+    const data = await res.json();
+    const notice = document.getElementById('gmailSettingsNotice');
+    const userInput = document.getElementById('admin_gmail_user');
+
+    if (data.user) {
+      userInput.value = data.user;
+    }
+
+    if (data.isConfigured) {
+      notice.innerHTML = `<span style="color:#22c55e;">✅ Gmail is active & configured (${data.maskedUser || data.user}). Real transfer emails will be sent.</span>`;
+    } else {
+      notice.innerHTML = `<span style="color:#f59e0b;">⚠️ Gmail not configured yet. Set your Gmail & 16-character App Password to enable live delivery.</span>`;
+    }
+  } catch (err) {
+    console.warn('Error loading Gmail settings:', err);
+  }
+}
+
+async function saveGmailSettings() {
+  const user = document.getElementById('admin_gmail_user').value.trim();
+  const pass = document.getElementById('admin_gmail_pass').value.trim();
+
+  if (!user) {
+    alert('Please enter your Gmail address.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/settings/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user, pass })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAlert('Gmail settings saved successfully!');
+      loadGmailSettings();
+    } else {
+      alert('Failed to save Gmail settings.');
+    }
+  } catch (err) {
+    alert('Network error saving settings: ' + err.message);
+  }
+}
+
+async function sendAdminTestEmail() {
+  const recipient = document.getElementById('admin_test_recipient').value.trim();
+  const notice = document.getElementById('gmailSettingsNotice');
+
+  notice.innerHTML = `<span style="color:#38bdf8;">⏳ Sending test email...</span>`;
+
+  try {
+    const res = await fetch('/api/settings/test-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      notice.innerHTML = `<span style="color:#22c55e;">✅ ${data.message}</span>`;
+      showAlert('Test email dispatched successfully!');
+    } else {
+      notice.innerHTML = `<span style="color:#ef4444;">❌ Error: ${data.error}</span>`;
+    }
+  } catch (err) {
+    notice.innerHTML = `<span style="color:#ef4444;">❌ Network error: ${err.message}</span>`;
+  }
 }
