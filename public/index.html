@@ -80,7 +80,7 @@
         <div class="for-you-carousel" id="forYouCarousel">
           <!-- Main Hero Banner Card -->
           <div class="for-you-card" onclick="openEventById(1)">
-            <div class="fyc-banner" style="background-image: url('/assets/kings_banner.png');">
+            <div class="fyc-banner" style="background-image: url('/assets/kings_banner.jpg');">
               <div class="fyc-overlay"></div>
               <div class="fyc-badge">LOS ANGELES KINGS</div>
             </div>
@@ -105,7 +105,7 @@
 
           <!-- Secondary Hero Banner Card -->
           <div class="for-you-card" onclick="openEventById(1)">
-            <div class="fyc-banner" style="background-image: url('/assets/u2_banner.png');">
+            <div class="fyc-banner" style="background-image: url('/assets/u2_banner.jpg');">
               <div class="fyc-overlay"></div>
               <div class="fyc-badge">U2 WORLD TOUR</div>
             </div>
@@ -139,7 +139,7 @@
           <!-- 01 Kings -->
           <div class="trending-item">
             <span class="rank-num">01</span>
-            <div class="trending-thumb" style="background-image: url('/assets/kings_banner.png');"></div>
+            <div class="trending-thumb" style="background-image: url('/assets/kings_banner.jpg');"></div>
             <div class="trending-info">
               <span class="trending-name">LOS ANGELES KINGS</span>
               <span class="trending-category">🎤 NHL</span>
@@ -149,7 +149,7 @@
           <!-- 02 Lakers -->
           <div class="trending-item">
             <span class="rank-num">02</span>
-            <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.png');"></div>
+            <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
             <div class="trending-info">
               <span class="trending-name">LOS ANGELES LAKERS</span>
               <span class="trending-category">🏆 NBA</span>
@@ -159,7 +159,7 @@
           <!-- 03 Dodgers -->
           <div class="trending-item">
             <span class="rank-num">03</span>
-            <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.png');"></div>
+            <div class="trending-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
             <div class="trending-info">
               <span class="trending-name">LOS ANGELES DODGERS</span>
               <span class="trending-category">⚾ MLB</span>
@@ -176,7 +176,7 @@
 
         <div class="recent-events-scroll" id="recentEventsScroll">
           <div class="recent-event-card" onclick="openEventById(1)">
-            <div class="rec-thumb" style="background-image: url('/assets/dodgers_banner.png');"></div>
+            <div class="rec-thumb" style="background-image: url('/assets/dodgers_banner.jpg');"></div>
             <div class="rec-info">
               <span class="rec-date">20 20 —</span>
               <span class="rec-name">LOS ANGELES DODGERS</span>
@@ -184,7 +184,7 @@
             </div>
           </div>
           <div class="recent-event-card" onclick="openEventById(1)">
-            <div class="rec-thumb" style="background-image: url('/assets/u2_banner.png');"></div>
+            <div class="rec-thumb" style="background-image: url('/assets/u2_banner.jpg');"></div>
             <div class="rec-info">
               <span class="rec-date">Tue 15 Dec</span>
               <span class="rec-name">LOS ANGELES LAKERS</span>
@@ -213,6 +213,17 @@
          VIEW 2: WATCHLIST / MANAGE TICKETS (ADMIN DASHBOARD)
          ======================================================== -->
     <section class="tab-view" id="viewWatchlist">
+
+      <!-- AUTH GATE OVERLAY — shown when not logged in -->
+      <div class="watchlist-auth-gate" id="watchlistAuthGate" style="display:none;">
+        <div class="wag-inner">
+          <div class="tm-mini-logo big" style="margin:0 auto 18px;">t</div>
+          <h2 class="wag-title">Sign In to Access</h2>
+          <p class="wag-sub">Create a personal account or sign in to manage your tickets, track transfers, and customise your experience.</p>
+          <button class="primary-blue-btn" style="width:100%; margin-top:8px;" onclick="openAuthModal('login')">Sign In</button>
+          <button class="wag-create-btn" onclick="openAuthModal('register')">Create Account</button>
+        </div>
+      </div>
       <!-- Header -->
       <div class="manage-header">
         <h1 class="manage-title">Manage Tickets</h1>
@@ -327,10 +338,15 @@
       <!-- Header -->
       <div class="my-events-header">
         <div class="meh-left"></div>
-        <h1 class="meh-title">My Events</h1>
+        <h1 class="meh-title">My Events <button class="country-flag-btn" id="countryFlagBtn" onclick="toggleCountryPicker(event)"><span id="countryFlagEmoji">🇺🇸</span></button></h1>
         <div class="meh-right">
           <button class="help-link-btn" onclick="alert('Ticketmaster Support: Contact your event organizer or visit Help Center.')">Help</button>
         </div>
+      </div>
+
+      <!-- Country Dropdown -->
+      <div class="country-dropdown" id="countryDropdown">
+        <!-- Populated by JS -->
       </div>
 
       <!-- Subtabs: UPCOMING & PAST -->
@@ -354,7 +370,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
           </div>
 
-          <div class="hec-poster" id="hecPoster" style="background-image: url('/assets/u2_banner.png');"></div>
+          <div class="hec-poster" id="hecPoster" style="background-image: url('/assets/u2_banner.jpg');"></div>
 
           <div class="hec-info-box">
             <div class="hec-date-badge" id="hecDateBadge">MON, JUL 05, 2027 • 7:30 PM</div>
@@ -384,52 +400,155 @@
     </section>
 
     <!-- ========================================================
-         VIEW 4: ACCOUNT TAB (AUTH & USER SETTINGS)
+         VIEW 4: ACCOUNT TAB — Exact Ticketmaster clone
          ======================================================== -->
     <section class="tab-view" id="viewAccount">
-      <div class="manage-header">
-        <h1 class="manage-title">My Account</h1>
-      </div>
-
-      <div class="account-tab-content">
-        <!-- Logged-In User Card -->
-        <div class="account-card" id="accountUserCard">
-          <div class="acc-avatar" id="accTabAvatar">TO</div>
-          <div class="acc-details">
-            <h3 class="acc-name" id="accTabName">Toom</h3>
-            <span class="acc-email" id="accTabEmail">toom41170@gmail.com</span>
-            <span class="acc-loc" id="accTabLocation">📍 Los Angeles, United States</span>
+      <div class="tm-account-scroll">
+        <!-- Profile Hero -->
+        <div class="tma-profile-hero">
+          <div class="tma-avatar-ring">
+            <div class="tma-avatar" id="accTabAvatar">S</div>
           </div>
-          <div class="acc-status-badge">Active Plan (22 Days Left)</div>
-        </div>
-
-        <div class="account-actions-list">
-          <div class="acc-action-row" onclick="openManageSubView('profileLocation')">
-            <div class="aar-left">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              <span>Personal Profile & Location</span>
-            </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-          </div>
-
-          <div class="acc-action-row" onclick="openManageSubView('settings')">
-            <div class="aar-left">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              <span>App Settings & Transfer Fee</span>
-            </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-          </div>
-
-          <div class="acc-action-row" onclick="openAuthModal('switch')">
-            <div class="aar-left">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#026cdf" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-              <span>Switch / Login to Another Account</span>
-            </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="tma-hero-info">
+            <div class="tma-name" id="accTabName">Serena</div>
+            <div class="tma-email" id="accTabEmail">toom41170@gmail.com</div>
           </div>
         </div>
 
-        <div class="danger-zone-wrap">
+        <!-- Personalization -->
+        <div class="tma-section-label">Personalization</div>
+        <div class="tma-card">
+          <div class="tma-row" onclick="openInboxView()">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+              <span>My Inbox</span>
+            </div>
+            <div class="tma-row-right">
+              <span class="tma-red-badge">1</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row" onclick="openFavoritesView()">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span>Favorites</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row" onclick="openLocationView()">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Location</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Permissions -->
+        <div class="tma-section-label">Permissions</div>
+        <div class="tma-card">
+          <div class="tma-row">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              <span>Location Content</span>
+            </div>
+            <label class="tma-ios-switch">
+              <input type="checkbox" id="permLocationContent" onchange="handlePermToggle('locationContent', this.checked)">
+              <span class="tma-slider"></span>
+            </label>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span>Notifications</span>
+            </div>
+            <label class="tma-ios-switch">
+              <input type="checkbox" id="permNotifications" checked onchange="handlePermToggle('notifications', this.checked)">
+              <span class="tma-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Account -->
+        <div class="tma-section-label">Account</div>
+        <div class="tma-card">
+          <div class="tma-row" onclick="openManageSubView('profileLocation')">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M15 3.5a2.121 2.121 0 0 1 3 3"/></svg>
+              <span>Edit Details</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row" onclick="openSecurityView()">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Security</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row" onclick="openPaymentView()">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              <span>Saved Payment Methods</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Help & Guidance -->
+        <div class="tma-section-label">Help &amp; Guidance</div>
+        <div class="tma-card">
+          <div class="tma-row" onclick="openHelpView()">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>Need Help?</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row" onclick="openFeedbackView()">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>Give Us Feedback</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Admin section -->
+        <div class="tma-section-label">Admin Tools</div>
+        <div class="tma-card">
+          <div class="tma-row" onclick="openManageSubView('settings')">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>App Settings &amp; Transfer Fee</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row" onclick="switchMainTab('viewWatchlist')">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Manage Tickets Dashboard</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="tma-divider"></div>
+          <div class="tma-row" onclick="openAuthModal('switch')">
+            <div class="tma-row-left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              <span>Switch / Login Another Account</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div class="tma-signout-wrap">
           <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
         </div>
       </div>
@@ -450,7 +569,7 @@
       </div>
 
       <!-- Event Poster Banner -->
-      <div class="edm-banner" id="edmBanner" style="background-image: url('/assets/u2_banner.png');"></div>
+      <div class="edm-banner" id="edmBanner" style="background-image: url('/assets/u2_banner.jpg');"></div>
 
       <!-- Event Info Container -->
       <div class="edm-info-card">

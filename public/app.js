@@ -94,7 +94,7 @@ async function loadUserEvents() {
         entrance_details: 'Gate 4 Entrance',
         days_until: 221,
         order_number: '5-85630/UT5',
-        artist_image: '/assets/u2_banner.png',
+        artist_image: '/assets/u2_banner.jpg',
         ticket_count: 4,
         is_hidden: false
       },
@@ -112,7 +112,7 @@ async function loadUserEvents() {
         entrance_details: 'North Entrance',
         days_until: 243,
         order_number: '7-99120/SKZ',
-        artist_image: '/assets/straykids_banner.png',
+        artist_image: '/assets/straykids_banner.jpg',
         ticket_count: 2,
         is_hidden: false
       }
@@ -125,9 +125,14 @@ async function loadUserEvents() {
 // ----------------------------------------------------------------
 function renderAllViews() {
   renderHome();
-  renderWatchlist();
+  renderWatchlistProfile();
   renderMyEvents();
   renderAccountTab();
+  checkWatchlistAuth();
+  // Update country flag on render
+  const c = TM_COUNTRIES.find(x => x.code === selectedCountryCode) || TM_COUNTRIES[0];
+  const flagEl = document.getElementById('countryFlagEmoji');
+  if (flagEl) flagEl.textContent = c.flag;
 }
 
 function renderHome() {
@@ -206,7 +211,7 @@ function renderManageEventsList() {
   container.innerHTML = userEvents.map(ev => `
     <div class="me-card">
       <div class="me-top">
-        <div class="me-thumb" style="background-image: url('${ev.artist_image || '/assets/u2_banner.png'}');"></div>
+        <div class="me-thumb" style="background-image: url('${ev.artist_image || '/assets/u2_banner.jpg'}');"></div>
         <div class="me-info">
           <div class="me-title">${ev.artist_name}</div>
           <div class="me-date">${ev.event_date}</div>
@@ -250,7 +255,7 @@ function renderMyEvents() {
     if (countdownEl) countdownEl.textContent = `Next Event: ${hero.days_until || 221} days`;
 
     const poster = document.getElementById('hecPoster');
-    if (poster) poster.style.backgroundImage = `url('${hero.artist_image || '/assets/u2_banner.png'}')`;
+    if (poster) poster.style.backgroundImage = `url('${hero.artist_image || '/assets/u2_banner.jpg'}')`;
 
     const dateBadge = document.getElementById('hecDateBadge');
     if (dateBadge) dateBadge.textContent = hero.event_date;
@@ -269,7 +274,7 @@ function renderMyEvents() {
     if (remaining.length === 0) {
       allList.innerHTML = `
         <div class="upcoming-mini-card" onclick="openEventById(${hero?.id || 1})">
-          <div class="umc-thumb" style="background-image: url('${hero?.artist_image || '/assets/u2_banner.png'}');"></div>
+          <div class="umc-thumb" style="background-image: url('${hero?.artist_image || '/assets/u2_banner.jpg'}');"></div>
           <div class="umc-body">
             <div class="umc-date">${hero?.event_date || ''}</div>
             <div class="umc-title">${hero?.artist_name || ''}</div>
@@ -280,7 +285,7 @@ function renderMyEvents() {
     } else {
       allList.innerHTML = remaining.map(ev => `
         <div class="upcoming-mini-card" onclick="openEventById(${ev.id})">
-          <div class="umc-thumb" style="background-image: url('${ev.artist_image || '/assets/straykids_banner.png'}');"></div>
+          <div class="umc-thumb" style="background-image: url('${ev.artist_image || '/assets/straykids_banner.jpg'}');"></div>
           <div class="umc-body">
             <div class="umc-date">${ev.event_date}</div>
             <div class="umc-title">${ev.artist_name}</div>
@@ -425,7 +430,7 @@ function renderEventDetailsModal() {
   if (!activeEvent) return;
 
   const banner = document.getElementById('edmBanner');
-  if (banner) banner.style.backgroundImage = `url('${activeEvent.artist_image || '/assets/u2_banner.png'}')`;
+  if (banner) banner.style.backgroundImage = `url('${activeEvent.artist_image || '/assets/u2_banner.jpg'}')`;
 
   document.getElementById('edmDateBadge').textContent = activeEvent.event_date;
   document.getElementById('edmTitle').textContent = activeEvent.artist_name;
@@ -826,7 +831,7 @@ async function saveNewEvent() {
     entrance_details: entrance || 'Gate 1 Entrance',
     section: section,
     ticket_count: count,
-    artist_image: newPosterBase64 || '/assets/u2_banner.png'
+    artist_image: newPosterBase64 || '/assets/u2_banner.jpg'
   });
 
   if (res && res.success) {
@@ -984,7 +989,7 @@ function handleHomeSearch(query) {
     list.innerHTML = filtered.map((e, idx) => `
       <div class="trending-item" onclick="openEventById(${e.id})">
         <span class="rank-num">0${idx + 1}</span>
-        <div class="trending-thumb" style="background-image: url('${e.artist_image || '/assets/u2_banner.png'}');"></div>
+        <div class="trending-thumb" style="background-image: url('${e.artist_image || '/assets/u2_banner.jpg'}');"></div>
         <div class="trending-info">
           <span class="trending-name">${e.artist_name}</span>
           <span class="trending-category">${e.venue_name}</span>
@@ -1075,3 +1080,195 @@ function handleLogout() {
     openAuthModal('login');
   }
 }
+
+
+// ----------------------------------------------------------------
+// Country Picker — Full Ticketmaster country list
+// ----------------------------------------------------------------
+const TM_COUNTRIES = [
+  { name: 'United States', flag: '🇺🇸', code: 'US' },
+  { name: 'Canada', flag: '🇨🇦', code: 'CA' },
+  { name: 'United Kingdom', flag: '🇬🇧', code: 'GB' },
+  { name: 'Ireland', flag: '🇮🇪', code: 'IE' },
+  { name: 'Australia', flag: '🇦🇺', code: 'AU' },
+  { name: 'New Zealand', flag: '🇳🇿', code: 'NZ' },
+  { name: 'Mexico', flag: '🇲🇽', code: 'MX' },
+  { name: 'Germany', flag: '🇩🇪', code: 'DE' },
+  { name: 'France', flag: '🇫🇷', code: 'FR' },
+  { name: 'Netherlands', flag: '🇳🇱', code: 'NL' },
+  { name: 'Belgium', flag: '🇧🇪', code: 'BE' },
+  { name: 'Spain', flag: '🇪🇸', code: 'ES' },
+  { name: 'Portugal', flag: '🇵🇹', code: 'PT' },
+  { name: 'Italy', flag: '🇮🇹', code: 'IT' },
+  { name: 'Sweden', flag: '🇸🇪', code: 'SE' },
+  { name: 'Norway', flag: '🇳🇴', code: 'NO' },
+  { name: 'Denmark', flag: '🇩🇰', code: 'DK' },
+  { name: 'Finland', flag: '🇫🇮', code: 'FI' },
+  { name: 'Austria', flag: '🇦🇹', code: 'AT' },
+  { name: 'Switzerland', flag: '🇨🇭', code: 'CH' },
+  { name: 'Poland', flag: '🇵🇱', code: 'PL' },
+  { name: 'Czech Republic', flag: '🇨🇿', code: 'CZ' },
+  { name: 'South Africa', flag: '🇿🇦', code: 'ZA' },
+  { name: 'Brazil', flag: '🇧🇷', code: 'BR' },
+  { name: 'Argentina', flag: '🇦🇷', code: 'AR' },
+  { name: 'Chile', flag: '🇨🇱', code: 'CL' },
+  { name: 'Colombia', flag: '🇨🇴', code: 'CO' },
+  { name: 'Japan', flag: '🇯🇵', code: 'JP' },
+  { name: 'South Korea', flag: '🇰🇷', code: 'KR' },
+  { name: 'Singapore', flag: '🇸🇬', code: 'SG' },
+  { name: 'Hong Kong', flag: '🇭🇰', code: 'HK' },
+  { name: 'Philippines', flag: '🇵🇭', code: 'PH' },
+  { name: 'Malaysia', flag: '🇲🇾', code: 'MY' },
+  { name: 'Thailand', flag: '🇹🇭', code: 'TH' },
+  { name: 'India', flag: '🇮🇳', code: 'IN' },
+  { name: 'United Arab Emirates', flag: '🇦🇪', code: 'AE' },
+  { name: 'Saudi Arabia', flag: '🇸🇦', code: 'SA' }
+];
+
+let selectedCountryCode = localStorage.getItem('tm_country') || 'US';
+
+function getSelectedCountry() {
+  return TM_COUNTRIES.find(c => c.code === selectedCountryCode) || TM_COUNTRIES[0];
+}
+
+function toggleCountryPicker(e) {
+  e && e.stopPropagation();
+  const dd = document.getElementById('countryDropdown');
+  if (!dd) return;
+  if (dd.classList.contains('open')) {
+    dd.classList.remove('open');
+    return;
+  }
+  // Render items
+  const sel = getSelectedCountry();
+  dd.innerHTML = TM_COUNTRIES.map(c => `
+    <div class="cdrop-item" onclick="selectCountry('${c.code}')">
+      <span><span class="cdrop-flag">${c.flag}</span>${c.name}</span>
+      ${c.code === selectedCountryCode ? '<span class="cdrop-check">✓</span>' : ''}
+    </div>
+  `).join('');
+  dd.classList.add('open');
+}
+
+function selectCountry(code) {
+  selectedCountryCode = code;
+  localStorage.setItem('tm_country', code);
+  const c = getSelectedCountry();
+  const flagEl = document.getElementById('countryFlagEmoji');
+  if (flagEl) flagEl.textContent = c.flag;
+  const dd = document.getElementById('countryDropdown');
+  if (dd) dd.classList.remove('open');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('countryDropdown');
+  if (dd && !dd.contains(e.target)) {
+    const btn = document.getElementById('countryFlagBtn');
+    if (btn && !btn.contains(e.target)) dd.classList.remove('open');
+  }
+});
+
+// ----------------------------------------------------------------
+// Watchlist Auth Gate
+// ----------------------------------------------------------------
+function checkWatchlistAuth() {
+  const gate = document.getElementById('watchlistAuthGate');
+  if (!gate) return;
+  // User is considered "logged in" if they have an id from server or localStorage
+  const hasUser = currentUser && currentUser.id && currentUser.email;
+  gate.style.display = hasUser ? 'none' : 'flex';
+}
+
+// ----------------------------------------------------------------
+// New Account Tab render (for the Ticketmaster-exact design)
+// ----------------------------------------------------------------
+function renderAccountTab() {
+  const name = currentUser.display_name || 'Serena';
+  const email = currentUser.email || 'toom41170@gmail.com';
+  const initial = name.charAt(0).toUpperCase();
+
+  const avatarEl = document.getElementById('accTabAvatar');
+  if (avatarEl) avatarEl.textContent = initial;
+  const nameEl = document.getElementById('accTabName');
+  if (nameEl) nameEl.textContent = name;
+  const emailEl = document.getElementById('accTabEmail');
+  if (emailEl) emailEl.textContent = email;
+}
+
+// Also keep rendering the Watchlist (dashboard) profile card
+function renderWatchlistProfile() {
+  const name = currentUser.display_name || 'Toom';
+  const email = currentUser.email || 'toom41170@gmail.com';
+  const initials = name.slice(0, 2).toUpperCase();
+
+  const pscAvatar = document.getElementById('pscAvatar');
+  if (pscAvatar) pscAvatar.textContent = initials;
+  const pscName = document.getElementById('pscName');
+  if (pscName) pscName.textContent = name;
+  const pscEmail = document.getElementById('pscEmail');
+  if (pscEmail) pscEmail.textContent = email;
+  const daysNum = document.getElementById('pscDaysNum');
+  if (daysNum) daysNum.textContent = currentUser.days_left || 22;
+
+  const selectEl = document.getElementById('emailEventSelect');
+  if (selectEl) {
+    selectEl.innerHTML = '<option value="">Choose an event</option>';
+    userEvents.forEach(ev => {
+      selectEl.innerHTML += `<option value="${ev.id}">${ev.artist_name}</option>`;
+    });
+  }
+
+  const plDisplay = document.getElementById('plDisplayName');
+  if (plDisplay) plDisplay.value = name;
+  const plMail = document.getElementById('plEmail');
+  if (plMail) plMail.value = email;
+  const plCity = document.getElementById('plCity');
+  if (plCity) plCity.value = currentUser.city || '';
+  const plCountry = document.getElementById('plCountry');
+  if (plCountry) plCountry.value = currentUser.country || '';
+
+  const s = currentUser.settings || {};
+  const setCheck = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = !!val;
+  };
+  setCheck('toggleAppleWallet', s.enableAppleWallet);
+  setCheck('toggleGoogleWallet', s.useGoogleWallet);
+  setCheck('toggleTransferAccepted', s.showTransferAccepted);
+  setCheck('toggleBlankPage', s.showBlankPage);
+  setCheck('toggleTransferFee', s.enableTransferFee);
+
+  const accByName = document.getElementById('settingAcceptedByName');
+  if (accByName) accByName.value = s.acceptedByName || 'Mary Flores';
+  const feeAmt = document.getElementById('settingTransferFeeAmount');
+  if (feeAmt) feeAmt.value = s.transferFeeAmount || '$50.47';
+  const passCount = document.getElementById('settingsPassesCount');
+  if (passCount) passCount.textContent = currentUser.wallet_passes || 0;
+
+  renderManageEventsList();
+  checkWatchlistAuth();
+}
+
+// Account tab stub helpers (open panels or alert)
+function openInboxView() { alert('My Inbox — no new messages.'); }
+function openFavoritesView() { alert('Favorites — coming soon.'); }
+function openLocationView() { openManageSubView('profileLocation'); }
+function openSecurityView() { alert('Security settings — manage your password and 2FA.'); }
+function openPaymentView() { alert('Saved Payment Methods — no payment methods saved.'); }
+function openHelpView() { window.open('https://help.ticketmaster.com', '_blank'); }
+function openFeedbackView() { alert('Thank you for using the app! Send feedback via the Telegram link in the dashboard.'); }
+
+// Permissions toggle
+function handlePermToggle(key, val) {
+  if (!currentUser.settings) currentUser.settings = {};
+  currentUser.settings['perm_' + key] = val;
+  saveSettingsSilently();
+}
+
+// Country flag on page load
+(function initCountryFlag() {
+  const c = TM_COUNTRIES.find(x => x.code === selectedCountryCode) || TM_COUNTRIES[0];
+  const flagEl = document.getElementById('countryFlagEmoji');
+  if (flagEl) flagEl.textContent = c.flag;
+})();

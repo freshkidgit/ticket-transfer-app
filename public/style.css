@@ -2241,3 +2241,254 @@ input:checked + .slider:before {
   font-weight: 700;
   text-decoration: none;
 }
+
+
+/* ================================================================
+   ACCOUNT TAB — Exact Ticketmaster clone
+   ================================================================ */
+.tm-account-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 90px 0;
+  background: #0b0c0e;
+}
+
+/* Profile hero */
+.tma-profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 16px 18px;
+}
+.tma-avatar-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2.5px solid #026cdf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tma-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2c2f35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+.tma-hero-info { flex: 1; }
+.tma-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+.tma-email {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Section label */
+.tma-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 10px 16px 6px;
+  letter-spacing: 0.3px;
+}
+
+/* Card */
+.tma-card {
+  background: #1c1e22;
+  margin: 0 12px 16px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Row */
+.tma-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.tma-row:active { background: #26282f; }
+.tma-row-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #ffffff;
+  font-size: 15.5px;
+  font-weight: 500;
+}
+.tma-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Divider between rows */
+.tma-divider {
+  height: 1px;
+  background: #2c2f35;
+  margin: 0 16px;
+}
+
+/* Red badge for Inbox */
+.tma-red-badge {
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+/* iOS-style toggle for Account tab */
+.tma-ios-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 29px;
+  flex-shrink: 0;
+}
+.tma-ios-switch input { opacity: 0; width: 0; height: 0; }
+.tma-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #3a3c42;
+  border-radius: 29px;
+  transition: 0.25s;
+}
+.tma-slider:before {
+  position: absolute;
+  content: "";
+  height: 23px;
+  width: 23px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.tma-ios-switch input:checked + .tma-slider { background-color: #34c759; }
+.tma-ios-switch input:checked + .tma-slider:before { transform: translateX(21px); }
+
+/* Sign out */
+.tma-signout-wrap {
+  padding: 8px 16px 32px;
+}
+
+/* ================================================================
+   COUNTRY FLAG PICKER — My Events header
+   ================================================================ */
+.country-flag-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 0 0 6px;
+  vertical-align: middle;
+  -webkit-tap-highlight-color: transparent;
+}
+.country-dropdown {
+  display: none;
+  position: absolute;
+  top: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e2027;
+  border-radius: 12px;
+  min-width: 220px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  z-index: 999;
+  overflow: hidden;
+}
+.country-dropdown.open { display: block; }
+.cdrop-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  font-size: 15px;
+  color: #ffffff;
+  cursor: pointer;
+  border-bottom: 1px solid #2a2d35;
+  -webkit-tap-highlight-color: transparent;
+}
+.cdrop-item:last-child { border-bottom: none; }
+.cdrop-item:active { background: #2c2f38; }
+.cdrop-item .cdrop-flag { font-size: 18px; margin-right: 10px; }
+.cdrop-check {
+  color: #026cdf;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+/* ================================================================
+   WATCHLIST AUTH GATE OVERLAY
+   ================================================================ */
+.watchlist-auth-gate {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #0b0c0e;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+.wag-inner {
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+.wag-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+.wag-sub {
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.wag-create-btn {
+  width: 100%;
+  margin-top: 12px;
+  background: transparent;
+  border: 1.5px solid #026cdf;
+  color: #026cdf;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* ================================================================
+   MY EVENTS HEADER — position relative for dropdown
+   ================================================================ */
+#viewTickets { position: relative; }
+.my-events-header { position: relative; }
