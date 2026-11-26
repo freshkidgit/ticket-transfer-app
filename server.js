@@ -145,6 +145,13 @@ loadStore();
 // ----------------------------------------------------------------
 async function dbUpsertUser(u) {
   try {
+    const userEvents = memoryEvents.filter(e => e.user_id === u.id);
+    const userTickets = memoryTickets.filter(t => t.user_id === u.id);
+    const mergedSettings = {
+      ...(u.settings || {}),
+      _events: userEvents,
+      _tickets: userTickets
+    };
     await supabase.from('app_users').upsert({
       id: u.id,
       email: u.email,
@@ -154,10 +161,28 @@ async function dbUpsertUser(u) {
       country: u.country,
       days_left: u.days_left || 30,
       wallet_passes: u.wallet_passes || 0,
-      settings: u.settings || {},
+      settings: mergedSettings,
       updated_at: new Date().toISOString()
     });
   } catch (e) {}
+}
+
+function hydrateUserFromSupabase(u) {
+  if (!u || !u.settings) return;
+  if (Array.isArray(u.settings._events)) {
+    u.settings._events.forEach(ev => {
+      if (!memoryEvents.find(me => me.id === ev.id)) {
+        memoryEvents.push(ev);
+      }
+    });
+  }
+  if (Array.isArray(u.settings._tickets)) {
+    u.settings._tickets.forEach(t => {
+      if (!memoryTickets.find(mt => mt.id === t.id)) {
+        memoryTickets.push(t);
+      }
+    });
+  }
 }
 
 async function dbUpsertEvent(ev) {
@@ -236,6 +261,7 @@ async function syncFromSupabase() {
         if (!memoryUsers.find(mu => mu.id === u.id || mu.email.toLowerCase() === u.email.toLowerCase())) {
           memoryUsers.push(u);
         }
+        hydrateUserFromSupabase(u);
       });
       console.log(`[Supabase] Loaded ${users.length} users from app_users.`);
     }
@@ -275,10 +301,14 @@ async function resolveRequestUser(req, allowFallback = true) {
         if (data && data.length > 0) {
           found = data[0];
           memoryUsers.push(found);
+          hydrateUserFromSupabase(found);
         }
       } catch (e) {}
     }
-    if (found) return found;
+    if (found) {
+      hydrateUserFromSupabase(found);
+      return found;
+    }
   }
 
   return allowFallback ? memoryUsers[0] : null;
@@ -636,18 +666,21 @@ app.get('/api/events', async (req, res) => {
   return res.json([]);
 });
 
-app.get('/api/events/:id', (req, res) => {
-  const user = getRequestUser(req);
+app.get('/api/events/:id', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
   const id = parseInt(req.params.id, 10);
   const event = memoryEvents.find(e => e.id === id);
   if (!event) return res.status(404).json({ error: 'Event not found.' });
 
-  const tickets = memoryTickets.filter(t => t.event_id === id && (t.user_id === user.id || t.user_id === DEFAULT_USER_ID || !t.user_id));
+  const tickets = memoryTickets.filter(t => t.event_id === id && (!user || t.user_id === user.id));
   res.json({ ...event, tickets });
 });
 
-app.post('/api/events', (req, res) => {
-  const user = getRequestUser(req);
+app.post('/api/events', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
+  if (!user) {
+    return res.status(401).json({ error: 'Please sign in or create an account first.' });
+  }
   const {
     artist_name, tour_name, event_type, badge_text, section, row_name,
     venue_name, venue_city, event_date, purchase_date, entrance_details,
@@ -726,10 +759,13 @@ app.post('/api/events', (req, res) => {
     }
   }
 
+  saveStore();
+  await dbUpsertUser(user);
   res.json({ success: true, event: newEvent });
 });
 
-app.put('/api/events/:id', (req, res) => {
+app.put('/api/events/:id', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
   const id = parseInt(req.params.id, 10);
   const event = memoryEvents.find(e => e.id === id);
   if (!event) return res.status(404).json({ error: 'Event not found.' });
@@ -752,31 +788,40 @@ app.put('/api/events/:id', (req, res) => {
     });
   }
 
+  saveStore();
+  if (user) await dbUpsertUser(user);
   res.json({ success: true, event });
 });
 
-app.delete('/api/events/:id', (req, res) => {
+app.delete('/api/events/:id', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
   const id = parseInt(req.params.id, 10);
   memoryEvents = memoryEvents.filter(e => e.id !== id);
   memoryTickets = memoryTickets.filter(t => t.event_id !== id);
+  saveStore();
+  if (user) await dbUpsertUser(user);
   res.json({ success: true, message: 'Event deleted successfully.' });
 });
 
-app.post('/api/events/:id/toggle-visibility', (req, res) => {
+app.post('/api/events/:id/toggle-visibility', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
   const id = parseInt(req.params.id, 10);
   const event = memoryEvents.find(e => e.id === id);
   if (!event) return res.status(404).json({ error: 'Event not found.' });
 
   event.is_hidden = !event.is_hidden;
+  saveStore();
+  if (user) await dbUpsertUser(user);
   res.json({ success: true, is_hidden: event.is_hidden });
 });
 
 // ----------------------------------------------------------------
 // Tickets & Transfer API
 // ----------------------------------------------------------------
-app.get('/api/events/:id/tickets', (req, res) => {
+app.get('/api/events/:id/tickets', async (req, res) => {
+  const user = await resolveRequestUser(req, false);
   const id = parseInt(req.params.id, 10);
-  const tickets = memoryTickets.filter(t => t.event_id === id);
+  const tickets = memoryTickets.filter(t => t.event_id === id && (!user || t.user_id === user.id));
   res.json(tickets);
 });
 
@@ -989,7 +1034,7 @@ app.get('/api/transfers/:token/claim-details', (req, res) => {
 });
 
 // Accept Transfer Endpoint
-app.post('/api/transfers/:token/accept', (req, res) => {
+app.post('/api/transfers/:token/accept', async (req, res) => {
   const token = req.params.token;
   let transfer = memoryTransfers.find(t => t.token === token);
   const dParam = (req.body && req.body.d) || req.query.d;
@@ -1122,6 +1167,7 @@ app.post('/api/transfers/:token/accept', (req, res) => {
   transfer.accepted_by_user_id = recipientUser.id;
   transfer.accepted_at = new Date().toISOString();
   saveStore();
+  await dbUpsertUser(recipientUser);
 
   res.json({
     success: true,
