@@ -822,6 +822,29 @@ app.get('/api/events', async (req, res) => {
   return res.json([]);
 });
 
+// Serve event poster image over HTTP (so emails & claim links never embed huge base64 data URIs)
+app.get('/api/events/:id/image', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const event = memoryEvents.find(e => e.id === id);
+  const img = event?.artist_image || '/assets/u2_banner.jpg';
+  if (img.startsWith('data:')) {
+    const match = img.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      res.setHeader('Content-Type', match[1]);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.send(Buffer.from(match[2], 'base64'));
+    }
+  }
+  if (img.startsWith('http')) {
+    return res.redirect(img);
+  }
+  const filePath = path.join(__dirname, 'public', img.replace(/^\/+/, ''));
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  return res.sendFile(path.join(__dirname, 'public', 'assets', 'u2_banner.jpg'));
+});
+
 app.get('/api/events/:id', async (req, res) => {
   const user = await resolveRequestUser(req, false);
   const id = parseInt(req.params.id, 10);
@@ -990,7 +1013,7 @@ app.get('/api/events/:id/tickets', async (req, res) => {
 });
 
 app.post('/api/events/:id/transfer', async (req, res) => {
-  const user = getRequestUser(req);
+  const user = (await resolveRequestUser(req, false)) || getRequestUser(req);
   const eventId = parseInt(req.params.id, 10);
   const { ticketIds, firstName, lastName, emailOrPhone, note } = req.body;
 
@@ -1016,18 +1039,22 @@ app.post('/api/events/:id/transfer', async (req, res) => {
   const baseUrl = (envBase && !envBase.includes('localhost')) ? envBase : `${protocol}://${host}`;
 
   const senderName = user.display_name || user.email.split('@')[0] || 'A Friend';
+  // NEVER embed base64 data URIs in the URL (causes 414 URI Too Long & Gmail clipping)
+  const safeImgPath = (event.artist_image && !event.artist_image.startsWith('data:'))
+    ? event.artist_image
+    : `/api/events/${event.id}/image`;
   const fallbackPayload = Buffer.from(JSON.stringify({
     s: senderName,
     rn: recipientName,
     re: contact,
-    n: note || '',
+    n: (note || '').slice(0, 200),
     eid: event.id,
     en: event.artist_name,
     et: event.tour_name,
     ed: event.event_date,
     vn: event.venue_name,
     vc: event.venue_city,
-    img: event.artist_image,
+    img: safeImgPath,
     sec: event.section,
     row: event.row_name,
     tids: ticketIds,

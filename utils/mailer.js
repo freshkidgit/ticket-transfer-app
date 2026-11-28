@@ -105,8 +105,11 @@ function generateTransferEmailHtml({ senderName, recipientName, event, tickets, 
   const seatNums = tixList.map(t => t.seat_number || t.seat_label || 'GA').join(', ');
   const seatString = seatNums ? `Seat ${seatNums}` : 'General Admission';
 
-  // Resolve absolute image url
+  // Resolve absolute HTTP image url (never embed base64 data URIs in Gmail)
   let artistImg = event.artist_image || '/assets/u2_banner.jpg';
+  if (artistImg.startsWith('data:')) {
+    artistImg = `/api/events/${event.id}/image`;
+  }
   if (!artistImg.startsWith('http')) {
     artistImg = `${baseUrl.replace(/\/+$/, '')}${artistImg.startsWith('/') ? '' : '/'}${artistImg}`;
   }
@@ -359,13 +362,13 @@ function generateTransferEmailHtml({ senderName, recipientName, event, tickets, 
     }
   </style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="email-container">
-      <div class="top-blue-bar"></div>
+<body style="margin:0; padding:0; background-color:#0d0e12; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#ffffff;">
+  <div class="wrapper" style="width:100%; background-color:#0d0e12; padding:24px 12px; box-sizing:border-box;">
+    <div class="email-container" style="max-width:480px; margin:0 auto; background-color:#121318; border-radius:12px; overflow:hidden; border:1px solid #23252e;">
+      <div class="top-blue-bar" style="height:4px; background-color:#026cdf; width:100%;"></div>
 
-      <div class="header-area">
-        <h1 class="main-title">Your Ticket Transfer From ${senderName} Is Ready To Be Accepted!</h1>
+      <div class="header-area" style="padding:24px 20px 16px 20px; text-align:center;">
+        <h1 class="main-title" style="font-size:19px; font-weight:700; line-height:1.35; color:#ffffff; margin:0 0 20px 0;">Your Ticket Transfer From ${senderName} Is Ready To Be Accepted!</h1>
 
         <!-- Visual Progress Stepper -->
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">
@@ -393,17 +396,17 @@ function generateTransferEmailHtml({ senderName, recipientName, event, tickets, 
       </div>
 
       <!-- Event Card -->
-      <div class="event-card">
-        <div class="event-artist">${event.artist_name}</div>
-        <div class="event-date-row">${event.event_date}</div>
-        <div class="event-venue-row">${event.venue_name} - ${event.venue_city}</div>
+      <div class="event-card" style="background-color:#1a1b22; border:1px solid #282a35; border-radius:8px; padding:16px; margin:0 16px 16px 16px;">
+        <div class="event-artist" style="font-size:15px; font-weight:800; color:#ffffff; letter-spacing:0.3px; margin-bottom:4px; text-transform:uppercase;">${event.artist_name}</div>
+        <div class="event-date-row" style="font-size:13px; color:#9ca3af; margin-bottom:3px;">${event.event_date}</div>
+        <div class="event-venue-row" style="font-size:13px; color:#9ca3af; margin-bottom:12px;">${event.venue_name} - ${event.venue_city || ''}</div>
         
-        <div class="event-seats-row">
+        <div class="event-seats-row" style="font-size:13.5px; font-weight:600; color:#e5e7eb; margin-bottom:12px; padding-top:8px; border-top:1px solid #282a35;">
           Section ${section}, Row ${row}, ${seatString}
         </div>
 
-        <div class="event-image-box">
-          <img src="${artistImg}" alt="${event.artist_name}">
+        <div class="event-image-box" style="width:100%; height:180px; overflow:hidden; border-radius:6px; margin-bottom:16px; background-color:#000000;">
+          <img src="${artistImg}" alt="${event.artist_name}" style="width:100%; height:100%; object-fit:cover; display:block;">
         </div>
 
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -414,43 +417,43 @@ function generateTransferEmailHtml({ senderName, recipientName, event, tickets, 
           </tr>
         </table>
 
-        <div class="btn-disclaimer">
-          By clicking 'ACCEPT TICKETS', you agree to our <a href="${claimUrl}">Terms of Use</a> and any applicable Ticketmaster Terms.<br><br>
+        <div class="btn-disclaimer" style="font-size:11px; color:#71717a; line-height:1.45; margin-top:14px; text-align:left;">
+          By clicking 'ACCEPT TICKETS', you agree to our <a href="${claimUrl}" style="color:#38bdf8; text-decoration:none;">Terms of Use</a> and any applicable Ticketmaster Terms.<br><br>
           If the tickets were obtained fraudulently by the person transferring them, they may be canceled at any time, removed from your account and no longer available for use.<br><br>
           This email is NOT your ticket.
         </div>
       </div>
 
       <!-- Message from Sender -->
-      <div class="note-box">
-        <div class="note-sender">A Message from ${senderName}...</div>
-        <div class="note-body">"${note ? note : 'No message included.'}"</div>
+      <div class="note-box" style="background-color:#1f2029; border:1px solid #3f3f46; border-radius:6px; padding:12px 14px; margin:0 16px 16px 16px;">
+        <div class="note-sender" style="color:#e879f9; font-size:12.5px; font-weight:700; margin-bottom:4px;">A Message from ${senderName}...</div>
+        <div class="note-body" style="color:#e4e4e7; font-size:13px; font-style:italic;">"${note ? note : 'No message included.'}"</div>
       </div>
 
       <!-- Information Flow -->
-      <div class="info-section">
-        <div class="info-heading">Transfer Status: Received</div>
-        <p class="info-text">
+      <div class="info-section" style="padding:0 16px 16px 16px;">
+        <div class="info-heading" style="font-size:14px; font-weight:700; color:#ffffff; margin-top:14px; margin-bottom:4px;">Transfer Status: Received</div>
+        <p class="info-text" style="font-size:12.5px; color:#9ca3af; line-height:1.5; margin:0;">
           You got ${count} ticket(s)! You're one step closer to seeing ${event.artist_name}
         </p>
 
-        <div class="info-heading">What's Next?</div>
-        <p class="info-text">
-          You'll need to first accept the ticket transfer so the order is moved to your Ticketmaster account. Once the transfer is complete, we'll let ${senderName} know you're all set. To accept the tickets, have your Ticketmaster password handy and login to your Ticketmaster account, or create a <a href="${claimUrl}">new one</a>. Visit <a href="${claimUrl}">Event Details</a> to view your ticket(s).
+        <div class="info-heading" style="font-size:14px; font-weight:700; color:#ffffff; margin-top:14px; margin-bottom:4px;">What's Next?</div>
+        <p class="info-text" style="font-size:12.5px; color:#9ca3af; line-height:1.5; margin:0;">
+          You'll need to first accept the ticket transfer so the order is moved to your Ticketmaster account. Once the transfer is complete, we'll let ${senderName} know you're all set. To accept the tickets, have your Ticketmaster password handy and login to your Ticketmaster account, or create a <a href="${claimUrl}" style="color:#38bdf8; text-decoration:none;">new one</a>. Visit <a href="${claimUrl}" style="color:#38bdf8; text-decoration:none;">Event Details</a> to view your ticket(s).
         </p>
       </div>
 
       <!-- Help section -->
-      <div class="help-box">
-        <div class="help-title">We're here to help</div>
-        <div class="help-sub">
-          If you have any questions, please contact <a href="${claimUrl}">Ticketmaster Fan Support</a>.
+      <div class="help-box" style="text-align:center; padding:16px; border-top:1px solid #23252e; margin-top:10px;">
+        <div class="help-title" style="font-size:13px; font-weight:700; color:#ffffff; margin-bottom:4px;">We're here to help</div>
+        <div class="help-sub" style="font-size:12px; color:#9ca3af;">
+          If you have any questions, please contact <a href="${claimUrl}" style="color:#38bdf8; text-decoration:none;">Ticketmaster Fan Support</a>.
         </div>
       </div>
 
       <!-- Blue Footer -->
-      <div class="blue-footer">
-        <div class="blue-footer-title">Ticketmaster, Attn: Fan Support</div>
+      <div class="blue-footer" style="background-color:#026cdf; color:#ffffff; padding:16px 20px; text-align:center; font-size:11px; line-height:1.5;">
+        <div class="blue-footer-title" style="font-weight:700; font-size:12px; margin-bottom:2px;">Ticketmaster, Attn: Fan Support</div>
         707 Virginia Street East, Suite 170, Charleston, WV 25301<br>
         © 2026 Ticketmaster. All rights reserved.
       </div>
